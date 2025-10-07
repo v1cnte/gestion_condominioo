@@ -6,17 +6,14 @@ Este proyecto corresponde al ramo de Desarrollo Web. Se trata de una aplicación
 
 La aplicación permite gestionar todas las necesidades administrativas de un condominio, desde el cobro de gastos comunes hasta la reserva de espacios comunitarios. Se implementó un sistema de roles diferenciados, ya que en la práctica no todos los usuarios requieren el mismo nivel de acceso al sistema.
 
-El proyecto inicialmente se planteó como una solución simple, pero durante el desarrollo se evidenció la complejidad inherente a un sistema de gestión inmobiliaria completo.
-
 ## Tecnologías implementadas
 
-- **React 19.1.1** - seleccionado por la familiaridad con el framework y la amplia documentación disponible
-- **Vite** - elegido por su superior rendimiento comparado con Create React App
-- **React Router DOM** - implementado para lograr funcionalidad de Single Page Application
-- **Tailwind CSS** - utilizado para acelerar el desarrollo de estilos, aunque requirió una curva de aprendizaje inicial
-- **FontAwesome** - biblioteca de iconos gratuita que proporciona una apariencia profesional
-- **Chart.js** - para la implementación de gráficos, presentó cierta complejidad pero el resultado fue satisfactorio
-- **Framer Motion** - agregado para mejorar la experiencia visual mediante animaciones
+- **React 19.1.1** 
+- **Vite** - 
+- **React Router DOM** 
+- **Tailwind CSS** 
+- **FontAwesome** 
+- **Framer Motion** 
 
 ## Roles de usuario implementados
 
@@ -102,3 +99,4 @@ Bibliotecas fundamentales utilizadas:
 - Headless UI para componentes accesibles
 
 - React DatePicker 
+
