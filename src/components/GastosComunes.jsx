@@ -1,5 +1,8 @@
-import { useState } from 'react';
+// Componente GastosComunes: lista, crea y borra gastos usando el contexto.
+// Importar hooks y contextos necesarios.
+import { useState, useEffect } from 'react';
 import { useNotificaciones } from '../context/NotificacionesContext';
+import { useGastos } from '../context/GastosContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPlus, 
@@ -10,33 +13,13 @@ import {
 
 function GastosComunes() {
   const { notificarNuevoGasto } = useNotificaciones();
+  
+  // Cargar datos y funciones desde el contexto de gastos
+  const { gastos, getGastos, createGasto, deleteGasto } = useGastos();
+
   const [showAddForm, setShowAddForm] = useState(false);
-  const [gastos, setGastos] = useState([
-    {
-      id: 1,
-      concepto: 'Mantenimiento Ascensores',
-      monto: 150000,
-      fecha: '2025-10-01',
-      tipo: 'Mantenimiento',
-      estado: 'Pendiente'
-    },
-    {
-      id: 2,
-      concepto: 'Seguridad',
-      monto: 280000,
-      fecha: '2025-10-01',
-      tipo: 'Servicios',
-      estado: 'Pagado'
-    },
-    {
-      id: 3,
-      concepto: 'Limpieza Áreas Comunes',
-      monto: 120000,
-      fecha: '2025-10-02',
-      tipo: 'Limpieza',
-      estado: 'Pagado'
-    }
-  ]);
+  
+  // Estado local para el formulario de nuevo gasto
 
   const [nuevoGasto, setNuevoGasto] = useState({
     concepto: '',
@@ -48,6 +31,9 @@ function GastosComunes() {
 
   const [filtro, setFiltro] = useState('');
 
+  // useEffect: cargar gastos al montar el componente
+  useEffect(() => { getGastos(); }, []);
+
   const tiposGasto = [
     'Mantenimiento',
     'Servicios',
@@ -57,17 +43,19 @@ function GastosComunes() {
     'Otros'
   ];
 
-  const handleSubmit = (e) => {
+  // handleSubmit: valida y crea un gasto via createGasto
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (nuevoGasto.concepto && nuevoGasto.monto && nuevoGasto.tipo) {
-      const gasto = {
-        id: gastos.length + 1,
+      
+      const gastoParaGuardar = {
         ...nuevoGasto,
         monto: parseFloat(nuevoGasto.monto)
       };
-      setGastos([...gastos, gasto]);
+
+  // llamar al contexto para persistir el gasto
+  await createGasto(gastoParaGuardar);
       
-      // Generar notificación
       notificarNuevoGasto(nuevoGasto.concepto, nuevoGasto.monto);
       
       setNuevoGasto({
@@ -81,11 +69,14 @@ function GastosComunes() {
     }
   };
 
-  const eliminarGasto = (id) => {
+  // eliminarGasto: confirma y borra usando deleteGasto del contexto
+  const eliminarGasto = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este gasto?')) {
-      setGastos(gastos.filter(gasto => gasto.id !== id));
+      await deleteGasto(id);
     }
   };
+
+  // Filtrado y cálculo de métricas (presentación)
 
   const gastosFiltrados = gastos.filter(gasto => {
     return gasto.concepto.toLowerCase().includes(filtro.toLowerCase()) ||
@@ -122,7 +113,7 @@ function GastosComunes() {
         </div>
       </div>
 
-      {/* Resumen simple */}
+  {/* Resumen: totales y conteos */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-blue-50 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
@@ -141,7 +132,7 @@ function GastosComunes() {
         </div>
       </div>
 
-      {/* Modal para Agregar Gasto */}
+  {/* Modal: formulario nuevo gasto */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -252,7 +243,7 @@ function GastosComunes() {
         </div>
       )}
 
-      {/* Tabla de Gastos */}
+  {/* Tabla de gastos */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Lista de Gastos</h2>
@@ -281,22 +272,23 @@ function GastosComunes() {
               </tr>
             </thead>
             <tbody>
+              {/* Lista de gastos obtenida desde el contexto/API */}
               {gastosFiltrados.map((gasto) => (
-                <tr key={gasto.id} className="bg-white border-b hover:bg-gray-50">
+                <tr key={gasto._id} className="bg-white border-b hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium text-gray-900">{gasto.concepto}</td>
                   <td className="px-6 py-4">{gasto.tipo}</td>
                   <td className="px-6 py-4 font-medium text-gray-900">
                     ${gasto.monto.toLocaleString()}
                   </td>
-                  <td className="px-6 py-4">{gasto.fecha}</td>
+                  <td className="px-6 py-4">{new Date(gasto.fecha).toLocaleDateString()}</td>
                   <td className="px-6 py-4">
                     <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${getEstadoColor(gasto.estado)}`}>
                       {gasto.estado}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <button 
-                      onClick={() => eliminarGasto(gasto.id)}
+                    <button
+                      onClick={() => eliminarGasto(gasto._id)} // usa _id del documento
                       className="text-red-600 hover:text-red-800 transition-colors"
                     >
                       <FontAwesomeIcon icon={faTrash} />
@@ -310,7 +302,8 @@ function GastosComunes() {
 
         {gastosFiltrados.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            No se encontraron gastos que coincidan con los filtros aplicados.
+            {/* Mensaje: sin resultados */}
+            No hay gastos registrados en la base de datos.
           </div>
         )}
       </div>

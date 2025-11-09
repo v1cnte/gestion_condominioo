@@ -1,32 +1,29 @@
-// importando las librerías necesarias para los iconos de fontawesome
+// Dashboard: muestra tarjetas según el rol del usuario.
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faBuilding,           // icono de edificio para unidades
-  faWallet,            // icono de billetera para pagos y gastos
-  faCalendarCheck,     // icono de calendario para reservas
-  faExclamationTriangle, // icono de alerta para multas
-  faChartBar,          // icono de gráfico para reportes
-  faUsers,             // icono de usuarios para gestión de personas
-  faHammer,            // icono de martillo para mantenimiento
-  faFileAlt,           // icono de archivo para documentos
-  faBell,              // icono de campana para notificaciones
-  faKey,               // icono de llave para acceso restringido
-  faHome               // icono de casa para residentes
+import {
+  faBuilding,
+  faWallet,
+  faCalendarCheck,
+  faExclamationTriangle,
+  faChartBar,
+  faUsers,
+  faHammer,
+  faFileAlt,
+  faBell,
+  faKey,
+  faHome
 } from '@fortawesome/free-solid-svg-icons';
 
-// importando componente personalizado que creé para el manejo de imágenes
 import DashboardImage from './DashboardImage';
 
-// componente principal del dashboard - recibe la información del usuario logueado
 function Dashboard({ user }) {
 
-  // función clave: esta función define qué puede ver cada tipo de usuario
-  // es como un "filtro" que cambia el contenido según el rol
+  // getAccessByRole: devuelve las tarjetas permitidas según el rol
   const getAccessByRole = (userRole) => {
     // uso switch para manejar los diferentes casos de usuarios
     switch(userRole) {
       case 'super_admin':
-        // super admin: puede ver todo - usuarios, gastos totales, reportes
+        // super_admin: acceso completo (usuarios, gastos, reportes)
         return [
           {
             title: 'Usuarios',
@@ -55,7 +52,7 @@ function Dashboard({ user }) {
         ];
       
       case 'admin':
-        // administrador: maneja unidades, gastos y multas del condominio
+        // admin: gestiona unidades, gastos y multas
         return [
           {
             title: 'Unidades',
@@ -84,7 +81,7 @@ function Dashboard({ user }) {
         ];
       
       case 'conserje':
-        // conserje: trabajo operativo - pagos diarios, reservas y mantenimiento
+        // conserje: operativo (pagos, reservas, mantenimiento)
         return [
           {
             title: 'Pagos',
@@ -113,7 +110,7 @@ function Dashboard({ user }) {
         ];
       
       case 'directiva':
-        // directiva: supervisión - multas, reportes y documentos legales
+        // directiva: supervisión (multas, reportes, documentos)
         return [
           {
             title: 'Multas',
@@ -142,7 +139,7 @@ function Dashboard({ user }) {
         ];
       
       case 'residente':
-        // residente: solo ve su información personal - su unidad, sus gastos, sus reservas
+        // residente: info personal (unidad, gastos, reservas)
         return [
           {
             title: 'Mi Unidad',
@@ -171,7 +168,7 @@ function Dashboard({ user }) {
         ];
       
       default:
-        // si el rol no existe o hay error, mostrar acceso limitado
+        // acceso por defecto: limitado
         return [
           {
             title: 'Acceso',
@@ -185,11 +182,10 @@ function Dashboard({ user }) {
     }
   };
 
-  // punto clave: aquí se ejecuta la función y se obtienen las tarjetas específicas del usuario
-  // el "?" es para evitar errores si user es null (seguridad)
+  // dashboardCards: tarjetas según el rol (evita error si user es null)
   const dashboardCards = getAccessByRole(user?.userRole);
 
-  // función auxiliar: define los colores de las tarjetas según el tipo
+  // getColorClasses: clases CSS según color lógico de la tarjeta
   const getColorClasses = (color) => {
     const colors = {
       blue: 'text-blue-600 bg-blue-100',
@@ -201,27 +197,27 @@ function Dashboard({ user }) {
 
   return (
     <div className="p-6">
-      {/* header del dashboard: título y saludo personalizado */}
+  {/* Header: título y saludo */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
         <p className="text-gray-600">Bienvenido, {user?.userName || 'Usuario'}</p>
       </div>
 
-      {/* grid de tarjetas: se adapta a diferentes tamaños de pantalla */}
+  {/* Grid de tarjetas: responsive */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* mapeo de tarjetas: por cada tarjeta del rol, crear un elemento visual */}
+  {/* Mapeo de tarjetas: render por cada entrada de dashboardCards */}
         {dashboardCards.map((card, index) => (
           <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">{card.title}</h3>
-                {/* icono con colores: cada tarjeta tiene su propio color según el tipo */}
+                {/* Icono: color según tipo */}
                 <div className={`p-3 rounded-full ${getColorClasses(card.color)}`}>
                   <FontAwesomeIcon icon={card.icon} className="text-xl" />
                 </div>
               </div>
               
-              {/* imagen representativa: componente personalizado para mostrar imagen */}
+              {/* Imagen representativa: componente DashboardImage */}
               <div className="mb-4">
                 <DashboardImage
                   src={card.image}
@@ -231,12 +227,12 @@ function Dashboard({ user }) {
                 />
               </div>
               
-              {/* valor principal: el número o dato más importante */}
+              {/* Valor principal: dato destacado */}
               <div className="text-3xl font-bold text-gray-900 mb-2">
                 {card.value}
               </div>
               
-              {/* descripción: texto explicativo del dato mostrado */}
+              {/* Descripción: texto explicativo */}
               <p className="text-gray-600 text-sm">
                 {card.description}
               </p>
@@ -245,9 +241,9 @@ function Dashboard({ user }) {
         ))}
       </div>
 
-          {/* sección adicional: información complementaria del dashboard */}
+          {/* Sección adicional: actividad y estadísticas */}
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* actividad reciente: lista de acciones realizadas */}
+            {/* Actividad reciente */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Actividad Reciente</h3>
               <div className="space-y-3">
@@ -275,11 +271,11 @@ function Dashboard({ user }) {
               </div>
             </div>
 
-            {/* estadísticas: gráficos y porcentajes del mes */}
+            {/* Estadísticas del mes */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Estadísticas del Mes</h3>
               <div className="space-y-4">
-                {/* barra de progreso: porcentaje de pagos completados */}
+                {/* Barra: pagos completados */}
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Pagos completados</span>
                   <span className="font-semibold text-green-600">87%</span>
@@ -288,7 +284,7 @@ function Dashboard({ user }) {
                   <div className="bg-green-500 h-2 rounded-full" style={{width: '87%'}}></div>
                 </div>
                 
-                {/* barra de progreso: porcentaje de ocupación */}
+                {/* Barra: ocupación */}
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Ocupación</span>
                   <span className="font-semibold text-blue-600">94%</span>

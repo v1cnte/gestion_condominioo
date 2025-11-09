@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faSave, 
+import {
+  faSave,
   faBuilding,
   faClock,
   faBell,
@@ -9,7 +9,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 function Configuracion() {
-  // configuraciones básicas - mantuve solo lo importante
+  // Configuración local simulada: estado y guardado mock
   const [config, setConfig] = useState({
     nombreCondominio: 'Condominio Vista Hermosa',
     administrador: 'Carlos Mendes',
@@ -32,7 +32,7 @@ function Configuracion() {
   const [mensaje, setMensaje] = useState('');
   const [guardando, setGuardando] = useState(false);
 
-  // función simple para cambiar valores
+  // cambiarValor: actualiza una clave del objeto config
   const cambiarValor = (campo, valor) => {
     setConfig(prev => ({
       ...prev,
@@ -40,7 +40,7 @@ function Configuracion() {
     }));
   };
 
-  // guardar configuración
+  // guardarConfig: simulación de guardado (setTimeout)
   const guardarConfig = async () => {
     setGuardando(true);
     // simulo que se guarda

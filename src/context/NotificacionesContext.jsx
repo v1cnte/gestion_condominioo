@@ -10,17 +10,18 @@ import {
   faEdit
 } from '@fortawesome/free-solid-svg-icons';
 
+// Contexto de notificaciones: guarda la lista y provee helpers.
+// Comentarios breves: usar `useNotificaciones()` dentro de un Provider.
 const NotificacionesContext = createContext();
 
 export const useNotificaciones = () => {
   const context = useContext(NotificacionesContext);
-  if (!context) {
-    throw new Error('useNotificaciones debe usarse dentro de NotificacionesProvider');
-  }
+  if (!context) throw new Error('useNotificaciones debe usarse dentro de NotificacionesProvider');
   return context;
 };
 
 export const NotificacionesProvider = ({ children }) => {
+  // estado inicial con ejemplos; reemplaza por datos reales si tienes backend
   const [notificaciones, setNotificaciones] = useState([
     {
       id: 1,
@@ -60,14 +61,12 @@ export const NotificacionesProvider = ({ children }) => {
     }
   ]);
 
+  // agrega una notificación con fecha/hora actuales y devuelve su id
   const agregarNotificacion = (notificacion) => {
     const nuevaNotificacion = {
       id: Date.now(),
       fecha: new Date().toISOString().split('T')[0],
-      hora: new Date().toLocaleTimeString('es-ES', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }),
+      hora: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
       leida: false,
       prioridad: 'Media',
       ...notificacion
@@ -77,72 +76,55 @@ export const NotificacionesProvider = ({ children }) => {
     return nuevaNotificacion.id;
   };
 
+  // marcar una notificación como leída
   const marcarComoLeida = (id) => {
-    setNotificaciones(prev => 
-      prev.map(notif => 
-        notif.id === id ? { ...notif, leida: true } : notif
-      )
-    );
+    setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n));
   };
 
-  const marcarTodasComoLeidas = () => {
-    setNotificaciones(prev => 
-      prev.map(notif => ({ ...notif, leida: true }))
-    );
-  };
+  // marcar todas como leídas
+  const marcarTodasComoLeidas = () => setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })));
 
-  const eliminarNotificacion = (id) => {
-    setNotificaciones(prev => 
-      prev.filter(notif => notif.id !== id)
-    );
-  };
+  // eliminar notificación por id
+  const eliminarNotificacion = (id) => setNotificaciones(prev => prev.filter(n => n.id !== id));
 
   const notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
 
-  // Funciones helper para crear notificaciones específicas
-  const notificarNuevoGasto = (descripcion, monto) => {
-    return agregarNotificacion({
-      tipo: 'pago',
-      titulo: 'Nuevo Gasto Común Registrado',
-      mensaje: `Se ha registrado un nuevo gasto: ${descripcion} por $${monto.toLocaleString()}`,
-      icono: faDollarSign,
-      color: 'text-green-500',
-      prioridad: 'Baja'
-    });
-  };
+  // helpers: crean notificaciones típicas y usan agregarNotificacion
+  const notificarNuevoGasto = (descripcion, monto) => agregarNotificacion({
+    tipo: 'pago',
+    titulo: 'Nuevo Gasto Común Registrado',
+    mensaje: `Se ha registrado un nuevo gasto: ${descripcion} por $${monto.toLocaleString()}`,
+    icono: faDollarSign,
+    color: 'text-green-500',
+    prioridad: 'Baja'
+  });
 
-  const notificarNuevaMulta = (unidad, motivo) => {
-    return agregarNotificacion({
-      tipo: 'multa',
-      titulo: 'Nueva Multa Aplicada',
-      mensaje: `Se ha aplicado una multa a la unidad ${unidad} por: ${motivo}`,
-      icono: faExclamationTriangle,
-      color: 'text-red-500',
-      prioridad: 'Media'
-    });
-  };
+  const notificarNuevaMulta = (unidad, motivo) => agregarNotificacion({
+    tipo: 'multa',
+    titulo: 'Nueva Multa Aplicada',
+    mensaje: `Se ha aplicado una multa a la unidad ${unidad} por: ${motivo}`,
+    icono: faExclamationTriangle,
+    color: 'text-red-500',
+    prioridad: 'Media'
+  });
 
-  const notificarNuevaReserva = (residente, espacio, fecha) => {
-    return agregarNotificacion({
-      tipo: 'reserva',
-      titulo: 'Nueva Reserva Solicitada',
-      mensaje: `${residente} ha solicitado reservar ${espacio} para el ${fecha}`,
-      icono: faCalendarAlt,
-      color: 'text-blue-500',
-      prioridad: 'Media'
-    });
-  };
+  const notificarNuevaReserva = (residente, espacio, fecha) => agregarNotificacion({
+    tipo: 'reserva',
+    titulo: 'Nueva Reserva Solicitada',
+    mensaje: `${residente} ha solicitado reservar ${espacio} para el ${fecha}`,
+    icono: faCalendarAlt,
+    color: 'text-blue-500',
+    prioridad: 'Media'
+  });
 
-  const notificarCambioEstado = (tipo, descripcion) => {
-    return agregarNotificacion({
-      tipo: 'info',
-      titulo: 'Cambio de Estado',
-      mensaje: descripcion,
-      icono: faEdit,
-      color: 'text-blue-500',
-      prioridad: 'Baja'
-    });
-  };
+  const notificarCambioEstado = (tipo, descripcion) => agregarNotificacion({
+    tipo: 'info',
+    titulo: 'Cambio de Estado',
+    mensaje: descripcion,
+    icono: faEdit,
+    color: 'text-blue-500',
+    prioridad: 'Baja'
+  });
 
   const value = {
     notificaciones,
@@ -152,7 +134,6 @@ export const NotificacionesProvider = ({ children }) => {
     marcarTodasComoLeidas,
     eliminarNotificacion,
     setNotificaciones,
-    // Helper functions
     notificarNuevoGasto,
     notificarNuevaMulta,
     notificarNuevaReserva,

@@ -1,5 +1,8 @@
-import { useState } from 'react';
+// src/components/Multas.jsx
+
+import { useState, useEffect } from 'react'; // <-- 1. IMPORTA useEffect
 import { useNotificaciones } from '../context/NotificacionesContext';
+import { useMultas } from '../context/MultasContext'; // <-- 2. IMPORTA EL HOOK (contexto)
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPlus, 
@@ -10,45 +13,13 @@ import {
 
 function Multas() {
   const { notificarNuevaMulta } = useNotificaciones();
+  
+  // --- 3. TRAEMOS TODO DESDE EL HOOK (contexto) ---
+  const { multas, getMultas, createMulta, deleteMulta } = useMultas();
+  
   const [showAddForm, setShowAddForm] = useState(false);
-  const [multas, setMultas] = useState([
-    {
-      id: 1,
-      unidad: '304',
-      residente: 'João Silva',
-      motivo: 'Ruido excesivo',
-      monto: 25000,
-      fecha: '2025-10-01',
-      estado: 'Pendiente'
-    },
-    {
-      id: 2,
-      unidad: '205',
-      residente: 'Ana Beatriz Santos',
-      motivo: 'Mascotas sin correa',
-      monto: 15000,
-      fecha: '2025-10-02',
-      estado: 'Pagada'
-    },
-    {
-      id: 3,
-      unidad: '102',
-      residente: 'Rafael Oliveira',
-      motivo: 'Estacionamiento indebido',
-      monto: 35000,
-      fecha: '2025-09-28',
-      estado: 'Pendiente'
-    },
-    {
-      id: 4,
-      unidad: '408',
-      residente: 'Bruno Luchini',
-      motivo: 'Basura fuera de horario',
-      monto: 20000,
-      fecha: '2025-10-03',
-      estado: 'Pendiente'
-    }
-  ]);
+  
+  // --- BORRAMOS EL 'useState' CON DATOS FALSOS ---
 
   const [nuevaMulta, setNuevaMulta] = useState({
     unidad: '',
@@ -61,6 +32,11 @@ function Multas() {
 
   const [filtro, setFiltro] = useState('');
 
+  // --- 4. LE DECIMOS QUE CARGUE LAS MULTAS DE LA BD AL ABRIR ---
+  useEffect(() => {
+    getMultas(); // getMultas 
+  }, []); // El [] significa "solo hazlo la primera vez"
+
   const motivosComunes = [
     'Ruido excesivo',
     'Mascotas sin correa',
@@ -70,17 +46,21 @@ function Multas() {
     'Otros'
   ];
 
-  const handleSubmit = (e) => {
+  
+  const handleSubmit = async (e) => { // Lo hacemos 'async'
     e.preventDefault();
     if (nuevaMulta.unidad && nuevaMulta.residente && nuevaMulta.motivo && nuevaMulta.monto) {
-      const multa = {
-        id: multas.length + 1,
+      
+      const multaParaGuardar = {
         ...nuevaMulta,
         monto: parseFloat(nuevaMulta.monto)
       };
-      setMultas([...multas, multa]);
+
+      //
+      await createMulta(multaParaGuardar); 
       
-      // Generar notificación
+      // 'MultasContext' se encargará de actualizar la lista)
+      
       notificarNuevaMulta(nuevaMulta.unidad, nuevaMulta.motivo);
       
       setNuevaMulta({
@@ -95,11 +75,16 @@ function Multas() {
     }
   };
 
-  const eliminarMulta = (id) => {
+  // --- 6. ACTUALIZAMOS EL 'eliminarMulta' ---
+  const eliminarMulta = async (id) => { // Lo hacemos 'async'
     if (window.confirm('¿Estás seguro de que quieres eliminar esta multa?')) {
-      setMultas(multas.filter(multa => multa.id !== id));
+  // ¡Aquí "llamamos" al hook (contexto) para que borre de la BD!
+  await deleteMulta(id);
     }
   };
+
+  // --- De aquí para abajo, todo el código de filtrado y JSX es IGUAL ---
+  
 
   const multasFiltradas = multas.filter(multa => {
     return multa.unidad.includes(filtro) ||
@@ -296,15 +281,17 @@ function Multas() {
               </tr>
             </thead>
             <tbody>
+              {/* ¡Esto ahora leerá las multas de la BD! */}
               {multasFiltradas.map((multa) => (
-                <tr key={multa.id} className="bg-white border-b hover:bg-gray-50">
+                <tr key={multa._id} className="bg-white border-b hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium text-gray-900">{multa.unidad}</td>
                   <td className="px-6 py-4">{multa.residente}</td>
                   <td className="px-6 py-4">{multa.motivo}</td>
                   <td className="px-6 py-4 font-medium text-gray-900">
                     ${multa.monto.toLocaleString()}
                   </td>
-                  <td className="px-6 py-4">{multa.fecha}</td>
+                  {/* (Opcional) Formatear la fecha de la BD */}
+                  <td className="px-6 py-4">{new Date(multa.fecha).toLocaleDateString()}</td>
                   <td className="px-6 py-4">
                     <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${getEstadoColor(multa.estado)}`}>
                       {multa.estado}
@@ -312,7 +299,7 @@ function Multas() {
                   </td>
                   <td className="px-6 py-4">
                     <button 
-                      onClick={() => eliminarMulta(multa.id)}
+                      onClick={() => eliminarMulta(multa._id)} // <-- Usar _id de Mongo
                       className="text-red-600 hover:text-red-800 transition-colors"
                     >
                       <FontAwesomeIcon icon={faTrash} />
@@ -326,7 +313,8 @@ function Multas() {
 
         {multasFiltradas.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            No se encontraron multas que coincidan con los filtros aplicados.
+            {/* Mensaje actualizado */}
+            No hay multas registradas en la base de datos.
           </div>
         )}
       </div>

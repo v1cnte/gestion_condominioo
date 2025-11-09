@@ -1,5 +1,10 @@
-import { useState } from 'react';
+// src/components/Ayuda.jsx
+
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext'; 
+import { useFaqs } from '../context/FaqContext'; 
+import { useConsultas } from '../context/ConsultaContext'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faQuestionCircle,
@@ -12,64 +17,34 @@ import {
 
 function Ayuda({ isOpen, onClose }) {
   const [openFAQ, setOpenFAQ] = useState(null);
+  
+  const { user } = useAuth(); 
+  const { faqs, getFaqs } = useFaqs(); 
+  const { createConsulta } = useConsultas(); 
+
   const [formData, setFormData] = useState({
-    email: '',
+    email: user ? user.email : '', 
     note: ''
   });
   const [showMessage, setShowMessage] = useState(false);
 
-  const faqData = [
-    {
-      id: 1,
-      question: "¿Cómo agrego un gasto común?",
-      answer: 'En la sección "Agregar Nuevo Gasto", completa la descripción, el monto y la fecha. Luego haz clic en "Agregar Gasto". El gasto aparecerá en la tabla y se sumará al total.'
-    },
-    {
-      id: 2,
-      question: "¿Qué hago si la página no carga bien?",
-      answer: "Prueba recargar el navegador. Si persiste, borra caché o usa otro navegador. También confirma tu conexión a Internet."
-    },
-    {
-      id: 3,
-      question: "¿Cómo veo el total de los gastos?",
-      answer: 'El total se muestra al final del listado como "Total Gastos". Se actualiza automáticamente cada vez que agregas o eliminas un gasto.'
-    },
-    {
-      id: 4,
-      question: "¿Puedo editar o eliminar un gasto después de agregarlo?",
-      answer: "Sí. Usa el icono de papelera para eliminarlo. Para editar, elimina el gasto y vuelve a ingresarlo con los datos corregidos."
-    },
-    {
-      id: 5,
-      question: "¿Qué pasa con mis datos? ¿Son seguros?",
-      answer: "Tus datos se manejan bajo buenas prácticas de seguridad (HTTPS, controles de acceso y respaldo). No se comparten con terceros sin autorización."
-    },
-    {
-      id: 6,
-      question: "¿Cómo reservo un espacio común?",
-      answer: 'Ve a la sección "Reservas", haz clic en "Nueva Reserva", completa los datos del espacio, fecha y horario. El sistema verificará la disponibilidad automáticamente.'
-    },
-    {
-      id: 7,
-      question: "¿Cómo funciona el sistema de multas?",
-      answer: 'Las multas se aplican por infracciones al reglamento. Puedes ver todas las multas en la sección correspondiente y cambiar su estado según el proceso de pago.'
-    },
-    {
-      id: 8,
-      question: "¿Cómo recibo notificaciones del sistema?",
-      answer: "Las notificaciones aparecen en el botón de campana en la parte superior. Se generan automáticamente cuando hay nuevos gastos, multas, reservas o eventos importantes."
+  useEffect(() => {
+    if (isOpen) {
+      getFaqs(); 
     }
-  ];
+  }, [isOpen]); 
 
   const toggleFAQ = (id) => {
     setOpenFAQ(openFAQ === id ? null : id);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => { 
     e.preventDefault();
-    console.log("Consulta enviada:", formData);
+    
+    await createConsulta(formData); 
+    
     setShowMessage(true);
-    setFormData({ email: '', note: '' });
+    setFormData({ ...formData, note: '' }); 
     setTimeout(() => setShowMessage(false), 5000);
   };
 
@@ -117,19 +92,19 @@ function Ayuda({ isOpen, onClose }) {
               <h3 className="text-2xl font-bold text-gray-800 mb-6">Preguntas Frecuentes</h3>
               
               <div className="space-y-3">
-                {faqData.map((faq) => (
-                  <div key={faq.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                {faqs.map((faq) => (
+                  <div key={faq._id} className="border border-gray-200 rounded-lg overflow-hidden">
                     <button
-                      onClick={() => toggleFAQ(faq.id)}
+                      onClick={() => toggleFAQ(faq._id)}
                       className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 transition-colors flex justify-between items-center"
                     >
                       <span className="font-medium text-gray-800">{faq.question}</span>
                       <FontAwesomeIcon 
-                        icon={openFAQ === faq.id ? faChevronUp : faChevronDown} 
+                        icon={openFAQ === faq._id ? faChevronUp : faChevronDown} 
                         className="text-gray-500"
                       />
                     </button>
-                    {openFAQ === faq.id && (
+                    {openFAQ === faq._id && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -144,17 +119,22 @@ function Ayuda({ isOpen, onClose }) {
                     )}
                   </div>
                 ))}
+                
+                {faqs.length === 0 && (
+                    <p className="text-gray-500 text-center">No hay preguntas frecuentes disponibles.</p>
+                )}
               </div>
             </div>
 
             {/* Contact Section */}
             <div className="bg-gray-50 rounded-lg p-6">
               <h3 className="text-xl font-bold text-gray-800 mb-4">¿Necesitas Más Ayuda?</h3>
+              
               <p className="text-gray-600 mb-6">
                 Si no encuentras la respuesta aquí, contacta al administrador del condominio o al soporte técnico.
-              </p>
-
-              {/* Contact Info */}
+              </p> {/* <-- ¡AQUÍ ESTABA EL ERROR! Ya está corregido. */}
+              
+              {/* Contact Info (Esto sigue siendo 'quemado', pero está bien) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="bg-white p-4 rounded-lg border border-gray-200">
                   <div className="flex items-center gap-3 mb-2">

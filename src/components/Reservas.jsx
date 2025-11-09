@@ -1,5 +1,8 @@
-import { useState } from 'react';
+// src/components/Reservas.jsx
+
+import { useState, useEffect } from 'react'; // importamos useEffect
 import { useNotificaciones } from '../context/NotificacionesContext';
+import { useReservas } from '../context/ReservasContext'; // importamos el contexto de reservas
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPlus, 
@@ -11,50 +14,13 @@ import {
 
 function Reservas() {
   const { notificarNuevaReserva } = useNotificaciones();
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [reservas, setReservas] = useState([
-    {
-      id: 1,
-      unidad: '304',
-      residente: 'João Silva',
-      espacio: 'Salón de Eventos',
-      fecha: '2025-10-15',
-      horaInicio: '18:00',
-      horaFin: '22:00',
-      estado: 'Confirmada'
-    },
-    {
-      id: 2,
-      unidad: '205',
-      residente: 'Ana Beatriz Santos',
-      espacio: 'Quincho',
-      fecha: '2025-10-12',
-      horaInicio: '14:00',
-      horaFin: '18:00',
-      estado: 'Pendiente'
-    },
-    {
-      id: 3,
-      unidad: '102',
-      residente: 'Rafael Oliveira',
-      espacio: 'Sala de Reuniones',
-      fecha: '2025-10-08',
-      horaInicio: '19:00',
-      horaFin: '21:00',
-      estado: 'Confirmada'
-    },
-    {
-      id: 4,
-      unidad: '408',
-      residente: 'Bruno Luchini',
-      espacio: 'Terraza',
-      fecha: '2025-10-20',
-      horaInicio: '16:00',
-      horaFin: '20:00',
-      estado: 'Confirmada'
-    }
-  ]);
+  
+  // obtenemos los datos y funciones del contexto
+  const { reservas, getReservas, createReserva, deleteReserva } = useReservas();
 
+  const [showAddForm, setShowAddForm] = useState(false);
+  
+  // estado inicial de una nueva reserva
   const [nuevaReserva, setNuevaReserva] = useState({
     unidad: '',
     residente: '',
@@ -67,6 +33,11 @@ function Reservas() {
 
   const [filtro, setFiltro] = useState('');
 
+  // carga las reservas al montar el componente
+  useEffect(() => {
+    getReservas(); // carga las reservas desde la base de datos
+  }, []); // ejecutar solo al montar
+
   const espaciosDisponibles = [
     'Salón de Eventos',
     'Quincho',
@@ -75,18 +46,15 @@ function Reservas() {
     'Piscina'
   ];
 
-  const handleSubmit = (e) => {
+  // maneja el envío del formulario de nueva reserva
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (nuevaReserva.unidad && nuevaReserva.residente && nuevaReserva.espacio && 
         nuevaReserva.fecha && nuevaReserva.horaInicio && nuevaReserva.horaFin) {
       
-      const reserva = {
-        id: reservas.length + 1,
-        ...nuevaReserva
-      };
-      setReservas([...reservas, reserva]);
+      // Guardamos la nueva reserva en la base de datos
+      await createReserva(nuevaReserva);
       
-      // Generar notificación
       notificarNuevaReserva(nuevaReserva.unidad, nuevaReserva.espacio);
       
       setNuevaReserva({
@@ -102,11 +70,15 @@ function Reservas() {
     }
   };
 
-  const eliminarReserva = (id) => {
+  // maneja la eliminación de una reserva
+  const eliminarReserva = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta reserva?')) {
-      setReservas(reservas.filter(reserva => reserva.id !== id));
+      // Eliminamos la reserva de la base de datos
+      await deleteReserva(id);
     }
   };
+
+  // lógica de filtrado y renderizado
 
   const reservasFiltradas = reservas.filter(reserva => {
     return reserva.unidad.includes(filtro) ||
@@ -316,8 +288,9 @@ function Reservas() {
               </tr>
             </thead>
             <tbody>
+              {/* listado de reservas desde la base de datos */}
               {reservasFiltradas.map((reserva) => (
-                <tr key={reserva.id} className="bg-white border-b hover:bg-gray-50">
+                <tr key={reserva._id} className="bg-white border-b hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium text-gray-900">{reserva.unidad}</td>
                   <td className="px-6 py-4">{reserva.residente}</td>
                   <td className="px-6 py-4">
@@ -326,7 +299,7 @@ function Reservas() {
                       {reserva.espacio}
                     </div>
                   </td>
-                  <td className="px-6 py-4">{reserva.fecha}</td>
+                  <td className="px-6 py-4">{new Date(reserva.fecha).toLocaleDateString()}</td>
                   <td className="px-6 py-4">{reserva.horaInicio} - {reserva.horaFin}</td>
                   <td className="px-6 py-4">
                     <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${getEstadoColor(reserva.estado)}`}>
@@ -335,7 +308,7 @@ function Reservas() {
                   </td>
                   <td className="px-6 py-4">
                     <button 
-                      onClick={() => eliminarReserva(reserva.id)}
+                      onClick={() => eliminarReserva(reserva._id)} // usa el id de mongodb
                       className="text-red-600 hover:text-red-800 transition-colors"
                     >
                       <FontAwesomeIcon icon={faTrash} />
@@ -349,7 +322,8 @@ function Reservas() {
 
         {reservasFiltradas.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            No se encontraron reservas que coincidan con los filtros aplicados.
+            {/* Mensaje actualizado */}
+            No hay reservas registradas en la base de datos.
           </div>
         )}
       </div>
