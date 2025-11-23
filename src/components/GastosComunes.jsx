@@ -1,27 +1,33 @@
-// Componente GastosComunes: lista, crea y borra gastos usando el contexto.
-// Importar hooks y contextos necesarios.
 import { useState, useEffect } from 'react';
 import { useNotificaciones } from '../context/NotificacionesContext';
 import { useGastos } from '../context/GastosContext';
+import { useAuth } from '../context/AuthContext'; // <--- Para saber el rol
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPlus, 
   faTrash, 
   faSearch, 
-  faDollarSign
+  faDollarSign,
+  faEdit,
+  faCheckCircle,
+  faTimesCircle,
+  faFilter
 } from '@fortawesome/free-solid-svg-icons';
 
 function GastosComunes() {
   const { notificarNuevoGasto } = useNotificaciones();
-  
-  // Cargar datos y funciones desde el contexto de gastos
-  const { gastos, getGastos, createGasto, deleteGasto } = useGastos();
+  const { gastos, getGastos, createGasto, deleteGasto, updateGasto } = useGastos();
+  const { user } = useAuth();
 
-  const [showAddForm, setShowAddForm] = useState(false);
-  
-  // Estado local para el formulario de nuevo gasto
+  // Lógica de permisos
+  const esAdmin = ['admin', 'super_admin'].includes(user?.rol);
 
-  const [nuevoGasto, setNuevoGasto] = useState({
+  const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // Saber si edito o creo
+  const [currentId, setCurrentId] = useState(null);
+
+  const [formGasto, setFormGasto] = useState({
+    unidad: '', 
     concepto: '',
     monto: '',
     fecha: new Date().toISOString().split('T')[0],
@@ -29,284 +35,268 @@ function GastosComunes() {
     estado: 'Pendiente'
   });
 
-  const [filtro, setFiltro] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('Todos'); // Filtro nuevo
 
-  // useEffect: cargar gastos al montar el componente
   useEffect(() => { getGastos(); }, []);
 
-  const tiposGasto = [
-    'Mantenimiento',
-    'Servicios',
-    'Limpieza',
-    'Seguridad',
-    'Suministros',
-    'Otros'
-  ];
+  const tiposGasto = ['Mantenimiento', 'Servicios', 'Limpieza', 'Seguridad', 'Suministros', 'Otros'];
 
-  // handleSubmit: valida y crea un gasto via createGasto
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (nuevoGasto.concepto && nuevoGasto.monto && nuevoGasto.tipo) {
-      
-      const gastoParaGuardar = {
-        ...nuevoGasto,
-        monto: parseFloat(nuevoGasto.monto)
-      };
+  // --- CRUD ---
 
-  // llamar al contexto para persistir el gasto
-  await createGasto(gastoParaGuardar);
-      
-      notificarNuevoGasto(nuevoGasto.concepto, nuevoGasto.monto);
-      
-      setNuevoGasto({
-        concepto: '',
-        monto: '',
-        fecha: new Date().toISOString().split('T')[0],
-        tipo: '',
-        estado: 'Pendiente'
-      });
-      setShowAddForm(false);
-    }
+  const handleOpenCreate = () => {
+    setIsEditing(false);
+    setFormGasto({ unidad: '', concepto: '', monto: '', fecha: new Date().toISOString().split('T')[0], tipo: '', estado: 'Pendiente' });
+    setShowModal(true);
   };
 
-  // eliminarGasto: confirma y borra usando deleteGasto del contexto
+  const handleOpenEdit = (gasto) => {
+    setIsEditing(true);
+    setCurrentId(gasto._id);
+    // Formatear fecha para el input date (YYYY-MM-DD)
+    const fechaFormat = new Date(gasto.fecha).toISOString().split('T')[0];
+    setFormGasto({ ...gasto, fecha: fechaFormat });
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const gastoData = { ...formGasto, monto: parseFloat(formGasto.monto) };
+
+    if (isEditing) {
+      await updateGasto(currentId, gastoData);
+    } else {
+      await createGasto(gastoData);
+      notificarNuevoGasto(gastoData.concepto, gastoData.monto);
+    }
+    setShowModal(false);
+  };
+
   const eliminarGasto = async (id) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este gasto?')) {
+    if (window.confirm('¿Eliminar este gasto permanentemente?')) {
       await deleteGasto(id);
     }
   };
 
-  // Filtrado y cálculo de métricas (presentación)
+  // --- Cambio rápido de estado (Solo Admin) ---
+  const toggleEstado = async (gasto) => {
+    const nuevoEstado = gasto.estado === 'Pendiente' ? 'Pagado' : 'Pendiente';
+    await updateGasto(gasto._id, { ...gasto, estado: nuevoEstado });
+  };
 
+  // --- Filtros ---
   const gastosFiltrados = gastos.filter(gasto => {
-    return gasto.concepto.toLowerCase().includes(filtro.toLowerCase()) ||
-      gasto.tipo.toLowerCase().includes(filtro.toLowerCase());
+    const matchTexto = gasto.concepto.toLowerCase().includes(busqueda.toLowerCase()) ||
+                       (gasto.unidad && gasto.unidad.toLowerCase().includes(busqueda.toLowerCase()));
+    
+    const matchEstado = filtroEstado === 'Todos' || gasto.estado === filtroEstado;
+
+    return matchTexto && matchEstado;
   });
 
-  const totalGastos = gastos.reduce((sum, gasto) => sum + gasto.monto, 0);
-  const gastosPendientes = gastos.filter(gasto => gasto.estado === 'Pendiente').length;
-  const gastosPagados = gastos.filter(gasto => gasto.estado === 'Pagado').length;
-
-  const getEstadoColor = (estado) => {
-    switch (estado) {
-      case 'Pendiente': return 'bg-yellow-100 text-yellow-800';
-      case 'Pagado': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // --- Totales ---
+  const totalMonto = gastos.reduce((sum, g) => sum + g.monto, 0);
+  const pendientes = gastos.filter(g => g.estado === 'Pendiente').length;
+  const pagados = gastos.filter(g => g.estado === 'Pagado').length;
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Gastos Comunes</h1>
-            <p className="text-gray-600">Gestión de gastos del condominio</p>
-          </div>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            <FontAwesomeIcon icon={faPlus} />
-            Agregar Gasto
+      <div className="mb-6 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Gastos Comunes</h1>
+          <p className="text-gray-600">Gestión y seguimiento de cobros</p>
+        </div>
+        
+        {/* Solo Admin ve el botón de agregar */}
+        {esAdmin && (
+          <button onClick={handleOpenCreate} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-colors">
+            <FontAwesomeIcon icon={faPlus} /> Nuevo Cobro
           </button>
-        </div>
+        )}
       </div>
 
-  {/* Resumen: totales y conteos */}
+      {/* Tarjetas de Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <FontAwesomeIcon icon={faDollarSign} className="text-blue-600" />
-            <h3 className="font-semibold text-blue-800">Total Gastos</h3>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center">
+          <div>
+            <p className="text-gray-500 text-sm">Total Facturado</p>
+            <p className="text-2xl font-bold text-blue-600">${totalMonto.toLocaleString()}</p>
           </div>
-          <p className="text-2xl font-bold text-blue-600">${totalGastos.toLocaleString()}</p>
+          <div className="p-3 bg-blue-50 rounded-full text-blue-600"><FontAwesomeIcon icon={faDollarSign} /></div>
         </div>
-        <div className="bg-yellow-50 rounded-lg p-4">
-          <h3 className="font-semibold text-yellow-800 mb-2">Pendientes</h3>
-          <p className="text-2xl font-bold text-yellow-600">{gastosPendientes}</p>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center">
+          <div>
+            <p className="text-gray-500 text-sm">Boletas Pendientes</p>
+            <p className="text-2xl font-bold text-yellow-600">{pendientes}</p>
+          </div>
+          <div className="p-3 bg-yellow-50 rounded-full text-yellow-600"><FontAwesomeIcon icon={faTimesCircle} /></div>
         </div>
-        <div className="bg-green-50 rounded-lg p-4">
-          <h3 className="font-semibold text-green-800 mb-2">Pagados</h3>
-          <p className="text-2xl font-bold text-green-600">{gastosPagados}</p>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center">
+          <div>
+            <p className="text-gray-500 text-sm">Boletas Pagadas</p>
+            <p className="text-2xl font-bold text-green-600">{pagados}</p>
+          </div>
+          <div className="p-3 bg-green-50 rounded-full text-green-600"><FontAwesomeIcon icon={faCheckCircle} /></div>
         </div>
       </div>
 
-  {/* Modal: formulario nuevo gasto */}
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Agregar Nuevo Gasto</h2>
-              <button
-                onClick={() => setShowAddForm(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
+      {/* Barra de Filtros */}
+      <div className="bg-white p-4 rounded-t-xl border-b border-gray-200 flex flex-col md:flex-row gap-4 justify-between items-center shadow-sm">
+        <div className="relative w-full md:w-96">
+          <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-3 text-gray-400" />
+          <input 
+            type="text" 
+            placeholder="Buscar por unidad o concepto..." 
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <FontAwesomeIcon icon={faFilter} className="text-gray-500" />
+          <select 
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
+            value={filtroEstado}
+            onChange={e => setFiltroEstado(e.target.value)}
+          >
+            <option value="Todos">Todos los estados</option>
+            <option value="Pendiente">Pendientes</option>
+            <option value="Pagado">Pagados</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Tabla */}
+      <div className="bg-white rounded-b-xl shadow-sm border border-t-0 border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3">Unidad</th>
+                <th className="px-6 py-3">Concepto</th>
+                <th className="px-6 py-3">Monto</th>
+                <th className="px-6 py-3">Fecha</th>
+                <th className="px-6 py-3">Estado</th>
+                {esAdmin && <th className="px-6 py-3 text-right">Acciones</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {gastosFiltrados.map((gasto) => (
+                <tr key={gasto._id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 font-bold text-gray-800">{gasto.unidad}</td>
+                  <td className="px-6 py-4">
+                    <p className="font-medium text-gray-900">{gasto.concepto}</p>
+                    <p className="text-xs text-gray-500">{gasto.tipo}</p>
+                  </td>
+                  <td className="px-6 py-4 font-medium text-gray-900">${gasto.monto.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-gray-500">{new Date(gasto.fecha).toLocaleDateString()}</td>
+                  <td className="px-6 py-4">
+                    <button 
+                      onClick={() => esAdmin && toggleEstado(gasto)} // Solo admin cambia estado con clic
+                      className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                        gasto.estado === 'Pagado' 
+                          ? 'bg-green-100 text-green-800 border-green-200' 
+                          : 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                      } ${esAdmin ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                      title={esAdmin ? "Clic para cambiar estado" : ""}
+                    >
+                      {gasto.estado}
+                    </button>
+                  </td>
+                  
+                  {/* Solo Admin ve botones de editar/borrar */}
+                  {esAdmin && (
+                    <td className="px-6 py-4 text-right">
+                      <button onClick={() => handleOpenEdit(gasto)} className="text-blue-600 hover:text-blue-800 mx-2" title="Editar">
+                        <FontAwesomeIcon icon={faEdit} />
+                      </button>
+                      <button onClick={() => eliminarGasto(gasto._id)} className="text-red-600 hover:text-red-800 mx-2" title="Eliminar">
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        {gastosFiltrados.length === 0 && (
+          <div className="p-8 text-center text-gray-500 bg-gray-50">
+            No se encontraron gastos con los filtros aplicados.
+          </div>
+        )}
+      </div>
+
+      {/* Modal Crear/Editar */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden">
+            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="font-bold text-gray-800">{isEditing ? 'Editar Gasto' : 'Nuevo Gasto'}</h3>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Unidad</label>
+                  <input type="text" required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    value={formGasto.unidad} onChange={e => setFormGasto({...formGasto, unidad: e.target.value})} placeholder="Ej: 304" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Monto</label>
+                  <input type="number" required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    value={formGasto.monto} onChange={e => setFormGasto({...formGasto, monto: e.target.value})} />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Concepto *
-                </label>
-                <input
-                  type="text"
-                  value={nuevoGasto.concepto}
-                  onChange={(e) => setNuevoGasto({...nuevoGasto, concepto: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Ej: Mantenimiento Ascensores"
-                  required
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Concepto</label>
+                <input type="text" required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  value={formGasto.concepto} onChange={e => setFormGasto({...formGasto, concepto: e.target.value})} />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Monto *
-                  </label>
-                  <input
-                    type="number"
-                    value={nuevoGasto.monto}
-                    onChange={(e) => setNuevoGasto({...nuevoGasto, monto: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="150000"
-                    required
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                  <input type="date" required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    value={formGasto.fecha} onChange={e => setFormGasto({...formGasto, fecha: e.target.value})} />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fecha *
-                  </label>
-                  <input
-                    type="date"
-                    value={nuevoGasto.fecha}
-                    onChange={(e) => setNuevoGasto({...nuevoGasto, fecha: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tipo *
-                  </label>
-                  <select
-                    value={nuevoGasto.tipo}
-                    onChange={(e) => setNuevoGasto({...nuevoGasto, tipo: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
-                  >
-                    <option value="">Seleccionar tipo</option>
-                    {tiposGasto.map((tipo, index) => (
-                      <option key={index} value={tipo}>{tipo}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Estado
-                  </label>
-                  <select
-                    value={nuevoGasto.estado}
-                    onChange={(e) => setNuevoGasto({...nuevoGasto, estado: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Pagado">Pagado</option>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                  <select required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+                    value={formGasto.tipo} onChange={e => setFormGasto({...formGasto, tipo: e.target.value})}>
+                    <option value="">Seleccionar...</option>
+                    {tiposGasto.map((t, i) => <option key={i} value={t}>{t}</option>)}
                   </select>
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                >
-                  Agregar Gasto
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Estado Inicial</label>
+                <div className="flex gap-4 mt-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="estado" value="Pendiente" checked={formGasto.estado === 'Pendiente'} onChange={e => setFormGasto({...formGasto, estado: e.target.value})} />
+                    <span className="text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded text-sm">Pendiente</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="estado" value="Pagado" checked={formGasto.estado === 'Pagado'} onChange={e => setFormGasto({...formGasto, estado: e.target.value})} />
+                    <span className="text-green-700 bg-green-100 px-2 py-0.5 rounded text-sm">Pagado</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Cancelar</button>
+                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  {isEditing ? 'Guardar Cambios' : 'Registrar Cobro'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-  {/* Tabla de gastos */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Lista de Gastos</h2>
-          <div className="flex items-center gap-2">
-            <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
-            <input
-              type="text"
-              value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
-              placeholder="Buscar gastos..."
-              className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-          </div>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-500">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-              <tr>
-                <th className="px-6 py-3">Concepto</th>
-                <th className="px-6 py-3">Tipo</th>
-                <th className="px-6 py-3">Monto</th>
-                <th className="px-6 py-3">Fecha</th>
-                <th className="px-6 py-3">Estado</th>
-                <th className="px-6 py-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Lista de gastos obtenida desde el contexto/API */}
-              {gastosFiltrados.map((gasto) => (
-                <tr key={gasto._id} className="bg-white border-b hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium text-gray-900">{gasto.concepto}</td>
-                  <td className="px-6 py-4">{gasto.tipo}</td>
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    ${gasto.monto.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4">{new Date(gasto.fecha).toLocaleDateString()}</td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${getEstadoColor(gasto.estado)}`}>
-                      {gasto.estado}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() => eliminarGasto(gasto._id)} // usa _id del documento
-                      className="text-red-600 hover:text-red-800 transition-colors"
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {gastosFiltrados.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            {/* Mensaje: sin resultados */}
-            No hay gastos registrados en la base de datos.
-          </div>
-        )}
-      </div>
     </div>
   );
 }

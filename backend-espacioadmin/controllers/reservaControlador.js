@@ -4,16 +4,35 @@ import Reserva from '../models/reservaModel.js';
 export const getReservas = async (req, res) => {
   try {
     const reservas = await Reserva.find();
-    res.json(reservas)
+    res.json(reservas);
   } catch (error) {
     res.status(500).json({ message: "Error al obtener reservas" });
   }
 };
 
-// Crear reserva — guarda una nueva reserva para un espacio.
+// Crear reserva — guarda una nueva reserva con validación de disponibilidad.
 export const createReserva = async (req, res) => {
   try {
-    const { unidad, residente, espacio, fecha, horaInicio, horaFin, estado } = req.body;
+    const { unidad, residente, espacio, fecha, horaInicio, horaFin } = req.body;
+
+    // 1. VALIDACIÓN: Verificar si ya existe reserva en ese horario
+    // Buscamos reservas que coincidan en espacio, fecha y se solapen en hora.
+    // Lógica de solapamiento: (InicioExistente < FinNuevo) Y (FinExistente > InicioNuevo)
+    const conflicto = await Reserva.findOne({
+      espacio,
+      fecha,
+      estado: 'Confirmada', // Solo nos importa chocar con las confirmadas
+      $and: [
+        { horaInicio: { $lt: horaFin } },
+        { horaFin: { $gt: horaInicio } }
+      ]
+    });
+
+    if (conflicto) {
+      return res.status(400).json({ message: ["El espacio ya está ocupado en ese horario"] });
+    }
+
+    // 2. Si no hay conflicto, creamos la reserva
     const newReserva = new Reserva({
       unidad,
       residente,
@@ -21,11 +40,13 @@ export const createReserva = async (req, res) => {
       fecha,
       horaInicio,
       horaFin,
-      estado
+      estado: 'Pendiente' // Por defecto Confirmada, o 'Pendiente' si implementas pagos
     });
+
     const savedReserva = await newReserva.save();
     res.json(savedReserva);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Error al crear la reserva" });
   }
 };

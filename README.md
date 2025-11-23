@@ -1,103 +1,74 @@
-# EspacioAdmin - Sistema para Condominios
+inyección gastos comunes
 
-Este proyecto corresponde al ramo de Desarrollo Web. Se trata de una aplicación para la administración integral de condominios, desarrollada con React y utilizando Vite.
+http://localhost:4000/api/gastos
 
-## Descripción del proyecto
-
-La aplicación permite gestionar todas las necesidades administrativas de un condominio, desde el cobro de gastos comunes hasta la reserva de espacios comunitarios. 
-
-El proyecto inicialmente se planteó como una solución simple, pero durante el desarrollo se evidenció la complejidad inherente a un sistema de gestión inmobiliaria completo.
-
-## Tecnologías implementadas
-
-- **React 19.1.1** 
-- **Vite**  
-- **React Router DOM**  
-- **Tailwind CSS** 
-- **FontAwesome**  
-- **Chart.js**  
-- **Framer Motion** 
-## Roles de usuario implementados
-
-- **Super Administrador**: acceso completo a todas las funcionalidades del sistema
-- **Administrador**: gestión de finanzas y usuarios, cubriendo la mayoría de operaciones críticas
-- **Conserje**: responsable de recibir pagos y gestionar reservas cotidianas
-- **Directiva**: acceso a multas y reportes con función de supervisión
-- **Residente**: acceso limitado a información personal únicamente
+ {
+  "concepto": "Reparación Ascensor Torre B",
+  "monto": 350000,
+  "tipo": "Mantenimiento",
+  "estado": "Pendiente",
+  "fecha": "2025-11-15"
+}
 
 
+inyección faqs
 
-## Funcionalidades desarrolladas
+http://localhost:4000/api/faqs
+{
+  "question": "¿Cómo pago mis gastos comunes?",
+  "answer": "En la sección 'Gastos Comunes' de la app."
+}
 
-El dashboard presenta contenido dinámico según el rol del usuario autenticado, funcionalidad que demandó considerable tiempo de desarrollo. Las características principales incluyen:
 
-- Gestión de usuarios con operaciones CRUD estándar
-- Control de gastos comunes con seguimiento de estados
-- Sistema de multas completamente funcional
-- Gestión de reservas para espacios comunes
-- Generación de reportes con visualización gráfica
-- Sistema de notificaciones para eventos importantes
+inyección consultas
 
-## Instalación y configuración
+http://localhost:4000/api/consultas 
 
-1. Clonar el repositorio desde el sistema de control de versiones
-2. Navegar al directorio del proyecto
-3. Instalar las dependencias requeridas:
-   ```bash
-   npm install
-   ```
-   Nota: en caso de errores de instalación, se recomienda eliminar node_modules y package-lock.json y reinstalar
+{
+  "email": "residente@condominio.com",
+  "note": "La luz del pasillo 3 está quemada."
+}
 
-## Entorno de desarrollo
+inyección reservas 
 
-```bash
-npm run dev
-```
-Esto iniciará el servidor de desarrollo en `http://localhost:5173` (o puerto 5174 si el anterior está ocupado)
 
-## Compilación para producción
+http://localhost:4000/api/reservas
 
-```bash
-npm run build
-npm run preview
-```
+{
+  "unidad": "B-202",
+  "residente": "Residente de Prueba",
+  "espacio": "Salón de Eventos",
+  "fecha": "2025-12-31",
+  "horaInicio": "20:00",
+  "horaFin": "02:00",
+  "estado": "Pendiente"
+}
 
-Para verificar la calidad del código:
-```bash
-npm run lint
-```
+inyección multas
 
-## Estructura del proyecto
+http://localhost:4000/api/reservas
 
-```
-src/
-├── components/           # Componentes React principales
-│   ├── Dashboard.jsx    # Panel principal (desarrollo extenso)
-│   ├── Login.jsx        # Sistema de autenticación
-│   ├── Layout.jsx       # Estructura general con sidebar
-│   ├── Usuarios.jsx     # Gestión de usuarios
-│   ├── GastosComunes.jsx # Módulo gastos comunes
-│   ├── Multas.jsx       # Sistema de multas
-│   ├── Reservas.jsx     # Gestión de reservas
-│   ├── Reportes.jsx     # Generación de reportes
-│   └── componentes adicionales
-├── context/             # Context API para gestión de estado
-├── styles/              # Estilos globales
-├── App.jsx             # Componente raíz
-└── main.jsx            # Punto de entrada
-```
+{
+  "unidad": "C-301",
+  "residente": "Bruno luchini",
+  "motivo": "Ruidos molestos fuera de horario permitido",
+  "monto": 50000,
+  "estado": "Pendiente",
+  "fecha": "2025-11-10"
+}
 
-## Dependencias principales
+inyección usuarios
 
-Bibliotecas fundamentales utilizadas:
-- React Router DOM para el sistema de navegación
+http://localhost:4000/api/registro
 
-- FontAwesome para iconografía consistente
+{
+  "nombre": "Nuevo Residente Ejemplo",
+  "email": "residente.nuevo@condominio.com",
+  "password": "password123",
+  "rol": "residente",
+  "unidad": "E-505"
+}
 
-- Chart.js para visualización de datos 
+ 
 
-- Framer Motion para animaciones 
 
-- Headless UI para componentes accesibles
-
-- React DatePicker 

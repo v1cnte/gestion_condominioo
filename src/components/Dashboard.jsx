@@ -1,311 +1,180 @@
-// Dashboard: muestra tarjetas según el rol del usuario.
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faBuilding,
-  faWallet,
-  faCalendarCheck,
-  faExclamationTriangle,
-  faChartBar,
+import { 
+  faWallet, 
+  faExclamationCircle, 
+  faCheckCircle, 
   faUsers,
-  faHammer,
-  faFileAlt,
-  faBell,
-  faKey,
-  faHome
+  faArrowUp,
 } from '@fortawesome/free-solid-svg-icons';
+import axios from '../api/axios';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Doughnut } from 'react-chartjs-2';
 
-import DashboardImage from './DashboardImage';
+// Registrar componentes de Chart.js
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 function Dashboard({ user }) {
+  const navigate = useNavigate();
+  
+  const [stats, setStats] = useState({
+    gastosMes: 0,
+    multasMes: 0,
+    reservasMes: 0,
+    morosidadTotal: 0
+  });
+  const [loading, setLoading] = useState(true);
 
-  // getAccessByRole: devuelve las tarjetas permitidas según el rol
-  const getAccessByRole = (userRole) => {
-    // uso switch para manejar los diferentes casos de usuarios
-    switch(userRole) {
-      case 'super_admin':
-        // super_admin: acceso completo (usuarios, gastos, reportes)
-        return [
-          {
-            title: 'Usuarios',
-            value: '45',
-            description: 'Gestión completa',
-            icon: faUsers,
-            color: 'red',
-            image: '/condominio_.jpeg'
-          },
-          {
-            title: 'Gastos Comunes',
-            value: '$ 2.500.000',
-            description: 'Total mensual',
-            icon: faWallet,
-            color: 'green',
-            image: '/dinero.jpg'
-          },
-          {
-            title: 'Reportes',
-            value: '12',
-            description: 'Reportes generados',
-            icon: faChartBar,
-            color: 'purple',
-            image: '/calendario.png'
-          }
-        ];
-      
-      case 'admin':
-        // admin: gestiona unidades, gastos y multas
-        return [
-          {
-            title: 'Unidades',
-            value: '128',
-            description: 'Total de unidades',
-            icon: faBuilding,
-            color: 'blue',
-            image: '/condominio_.jpeg'
-          },
-          {
-            title: 'Gastos Comunes',
-            value: '$ 600.000',
-            description: 'Recaudación del mes',
-            icon: faWallet,
-            color: 'green',
-            image: '/dinero.jpg'
-          },
-          {
-            title: 'Multas',
-            value: '8',
-            description: 'Multas pendientes',
-            icon: faExclamationTriangle,
-            color: 'red',
-            image: '/calendario.png'
-          }
-        ];
-      
-      case 'conserje':
-        // conserje: operativo (pagos, reservas, mantenimiento)
-        return [
-          {
-            title: 'Pagos',
-            value: '$ 450.000',
-            description: 'Recibidos hoy',
-            icon: faWallet,
-            color: 'green',
-            image: '/dinero.jpg'
-          },
-          {
-            title: 'Reservas',
-            value: '12',
-            description: 'Reservas activas',
-            icon: faCalendarCheck,
-            color: 'purple',
-            image: '/calendario.png'
-          },
-          {
-            title: 'Mantenimiento',
-            value: '3',
-            description: 'Pendientes',
-            icon: faHammer,
-            color: 'blue',
-            image: '/condominio_.jpeg'
-          }
-        ];
-      
-      case 'directiva':
-        // directiva: supervisión (multas, reportes, documentos)
-        return [
-          {
-            title: 'Multas',
-            value: '15',
-            description: 'Total del mes',
-            icon: faExclamationTriangle,
-            color: 'red',
-            image: '/calendario.png'
-          },
-          {
-            title: 'Reportes',
-            value: '7',
-            description: 'Reportes disponibles',
-            icon: faChartBar,
-            color: 'purple',
-            image: '/dinero.jpg'
-          },
-          {
-            title: 'Documentos',
-            value: '23',
-            description: 'Documentos legales',
-            icon: faFileAlt,
-            color: 'blue',
-            image: '/condominio_.jpeg'
-          }
-        ];
-      
-      case 'residente':
-        // residente: info personal (unidad, gastos, reservas)
-        return [
-          {
-            title: 'Mi Unidad',
-            value: 'Unidad 304',
-            description: 'Estado: Al día',
-            icon: faHome,
-            color: 'green',
-            image: '/condominio_.jpeg'
-          },
-          {
-            title: 'Gastos',
-            value: '$ 85.000',
-            description: 'Gastos comunes',
-            icon: faWallet,
-            color: 'blue',
-            image: '/dinero.jpg'
-          },
-          {
-            title: 'Reservas',
-            value: '2',
-            description: 'Mis reservas',
-            icon: faCalendarCheck,
-            color: 'purple',
-            image: '/calendario.png'
-          }
-        ];
-      
-      default:
-        // acceso por defecto: limitado
-        return [
-          {
-            title: 'Acceso',
-            value: 'Limitado',
-            description: 'Contacte al admin',
-            icon: faKey,
-            color: 'gray',
-            image: '/condominio_.jpeg'
-          }
-        ];
-    }
-  };
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        const [resResumen, resMorosos] = await Promise.all([
+          axios.get('/reportes/resumen'),
+          axios.get('/reportes/morosos')
+        ]);
 
-  // dashboardCards: tarjetas según el rol (evita error si user es null)
-  const dashboardCards = getAccessByRole(user?.userRole);
+        const totalDeuda = resMorosos.data.reduce((acc, curr) => acc + curr.totalDeuda, 0);
 
-  // getColorClasses: clases CSS según color lógico de la tarjeta
-  const getColorClasses = (color) => {
-    const colors = {
-      blue: 'text-blue-600 bg-blue-100',
-      green: 'text-green-600 bg-green-100',
-      purple: 'text-purple-600 bg-purple-100'
+        setStats({
+          ...resResumen.data,
+          morosidadTotal: totalDeuda
+        });
+        setLoading(false);
+      } catch (error) {
+        console.error("Error cargando dashboard:", error);
+        setLoading(false);
+      }
     };
-    return colors[color] || 'text-gray-600 bg-gray-100';
+    cargarDatos();
+  }, []);
+
+  const dataGrafico = {
+    labels: ['Recaudado (Est.)', 'Por Cobrar (Morosidad)'],
+    datasets: [
+      {
+        data: [stats.gastosMes, stats.morosidadTotal],
+        backgroundColor: ['#3B82F6', '#EF4444'],
+        hoverBackgroundColor: ['#2563EB', '#DC2626'],
+        borderWidth: 0,
+      },
+    ],
   };
+
+  if (loading) return <div className="p-6">Cargando panel...</div>;
 
   return (
     <div className="p-6">
-  {/* Header: título y saludo */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
-        <p className="text-gray-600">Bienvenido, {user?.userName || 'Usuario'}</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">Hola, {user?.nombre || 'Usuario'} </h1>
+        <p className="text-gray-600">Aquí tienes el resumen de lo que pasa en tu condominio.</p>
       </div>
 
-  {/* Grid de tarjetas: responsive */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  {/* Mapeo de tarjetas: render por cada entrada de dashboardCards */}
-        {dashboardCards.map((card, index) => (
-          <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">{card.title}</h3>
-                {/* Icono: color según tipo */}
-                <div className={`p-3 rounded-full ${getColorClasses(card.color)}`}>
-                  <FontAwesomeIcon icon={card.icon} className="text-xl" />
-                </div>
-              </div>
-              
-              {/* Imagen representativa: componente DashboardImage */}
-              <div className="mb-4">
-                <DashboardImage
-                  src={card.image}
-                  alt={card.title}
-                  icon={card.icon}
-                  title={card.title}
-                />
-              </div>
-              
-              {/* Valor principal: dato destacado */}
-              <div className="text-3xl font-bold text-gray-900 mb-2">
-                {card.value}
-              </div>
-              
-              {/* Descripción: texto explicativo */}
-              <p className="text-gray-600 text-sm">
-                {card.description}
-              </p>
+      {/* TARJETAS SUPERIORES */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Gastos del Mes</p>
+              <h3 className="text-2xl font-bold text-gray-800 mt-2">${stats.gastosMes.toLocaleString()}</h3>
+            </div>
+            <div className="p-3 bg-blue-50 rounded-lg text-blue-600"><FontAwesomeIcon icon={faWallet} /></div>
+          </div>
+          <div className="mt-4 flex items-center text-sm text-green-600">
+            <FontAwesomeIcon icon={faArrowUp} className="mr-1" /><span>Activos</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Deuda Total</p>
+              <h3 className="text-2xl font-bold text-red-600 mt-2">${stats.morosidadTotal.toLocaleString()}</h3>
+            </div>
+            <div className="p-3 bg-red-50 rounded-lg text-red-600"><FontAwesomeIcon icon={faExclamationCircle} /></div>
+          </div>
+          <div className="mt-4 flex items-center text-sm text-red-600"><span>Acción requerida</span></div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Reservas Activas</p>
+              <h3 className="text-2xl font-bold text-gray-800 mt-2">{stats.reservasMes}</h3>
+            </div>
+            <div className="p-3 bg-green-50 rounded-lg text-green-600"><FontAwesomeIcon icon={faCheckCircle} /></div>
+          </div>
+          <div className="mt-4 text-sm text-gray-500">Espacios comunes</div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Multas Cursadas</p>
+              <h3 className="text-2xl font-bold text-gray-800 mt-2">{stats.multasMes}</h3>
+            </div>
+            <div className="p-3 bg-yellow-50 rounded-lg text-yellow-600"><FontAwesomeIcon icon={faUsers} /></div>
+          </div>
+          <div className="mt-4 text-sm text-gray-500">Este mes</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Gráfico */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 col-span-2">
+          <h3 className="text-lg font-bold text-gray-800 mb-6">Datos financieros</h3>
+          <div className="h-64 flex items-center justify-center">
+            {stats.gastosMes === 0 && stats.morosidadTotal === 0 ? (
+              <p className="text-gray-400">No hay datos financieros suficientes aún.</p>
+            ) : (
+              <Doughnut data={dataGrafico} options={{ maintainAspectRatio: false }} />
+            )}
+          </div>
+        </div>
+
+        {/* ACCESOS RÁPIDOS */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Accesos Rápidos</h3>
+          <div className="space-y-3">
+            
+            <button 
+              onClick={() => navigate('/pagos')} 
+              className="w-full py-3 px-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-left flex items-center gap-3 transition-colors text-gray-700 cursor-pointer"
+            >
+              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              Registrar Pago
+            </button>
+
+            <button 
+              onClick={() => navigate('/reservas')}
+              className="w-full py-3 px-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-left flex items-center gap-3 transition-colors text-gray-700 cursor-pointer"
+            >
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              Nueva Reserva
+            </button>
+
+            
+            <button 
+              onClick={() => navigate('/gastos-comunes')}
+              className="w-full py-3 px-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-left flex items-center gap-3 transition-colors text-gray-700 cursor-pointer"
+            >
+              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+              Ver Gastos Comunes
+            </button>
+
+          </div>
+          
+          <div className="mt-8 pt-6 border-t border-gray-100">
+            <h4 className="text-sm font-semibold text-gray-500 mb-3">ESTADO DEL SISTEMA</h4>
+            <div className="flex items-center gap-2 text-green-600 text-sm">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              En línea y sincronizado
             </div>
           </div>
-        ))}
+        </div>
       </div>
+    </div>
+  );
+}
 
-          {/* Sección adicional: actividad y estadísticas */}
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Actividad reciente */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Actividad Reciente</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">Pago recibido - Unidad 304</p>
-                    <p className="text-xs text-gray-600">Hace 2 horas</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">Nueva reserva - Salón de eventos</p>
-                    <p className="text-xs text-gray-600">Hace 5 horas</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">Multa generada - Unidad 102</p>
-                    <p className="text-xs text-gray-600">Hace 1 día</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Estadísticas del mes */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Estadísticas del Mes</h3>
-              <div className="space-y-4">
-                {/* Barra: pagos completados */}
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Pagos completados</span>
-                  <span className="font-semibold text-green-600">87%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full" style={{width: '87%'}}></div>
-                </div>
-                
-                {/* Barra: ocupación */}
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Ocupación</span>
-                  <span className="font-semibold text-blue-600">94%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-blue-500 h-2 rounded-full" style={{width: '94%'}}></div>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Reservas utilizadas</span>
-                  <span className="font-semibold text-purple-600">73%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-purple-500 h-2 rounded-full" style={{width: '73%'}}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-      </div>
-    );
-  }
-
-// exportación: hacer disponible el componente para usar en otras partes de la app
 export default Dashboard;

@@ -6,14 +6,18 @@ import {
   updateReserva,
   deleteReserva
 } from '../controllers/reservaControlador.js';
+import { authRequired, tieneRol } from '../middlewares/authMiddleware.js';
 
-const router = Router()
+const router = Router();
 
-// Rutas de reservas — CRUD: listar, ver, crear, actualizar, eliminar
-router.get('/reservas', getReservas);
-router.get('/reservas/:id', getReserva);
-router.post('/reservas', createReserva);
-router.put('/reservas/:id', updateReserva);
-router.delete('/reservas/:id', deleteReserva);
+router.get('/reservas', authRequired, getReservas);
+router.get('/reservas/:id', authRequired, getReserva);
+
+// Crear: Residentes sí pueden reservar
+router.post('/reservas', authRequired, tieneRol(['residente', 'conserje', 'admin', 'super_admin']), createReserva);
+
+// Editar/Borrar: Residentes NO pueden borrar (solo Conserje/Admin)
+router.put('/reservas/:id', authRequired, tieneRol(['conserje', 'admin', 'super_admin']), updateReserva);
+router.delete('/reservas/:id', authRequired, tieneRol(['conserje', 'admin', 'super_admin']), deleteReserva);
 
 export default router;

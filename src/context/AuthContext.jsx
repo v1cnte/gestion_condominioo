@@ -1,9 +1,8 @@
-import { createContext, useState, useContext } from "react";
-import { loginRequest } from '../api/auth.js'; // función que hace la petición de login
+import { createContext, useState, useContext, useEffect } from "react";
+import { loginRequest } from '../api/auth.js';
 
 export const AuthContext = createContext();
 
-// Hook helper: devuelve el contexto y fuerza su uso dentro del Provider.
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth debe usarse dentro de AuthProvider");
@@ -11,30 +10,57 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // objeto usuario (o null si no hay)
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // booleano de sesión
-  const [errors, setErrors] = useState([]); // array de mensajes de error
+  const [user, setUser] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [errors, setErrors] = useState([]);
 
-  // signin: intenta hacer login y actualiza estado.
-  // devuelve la respuesta del servidor o lanza el error.
+  // Al cargar la app, revisamos si hay una sesión guardada en localStorage
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user_data');
+    const storedToken = localStorage.getItem('token');
+    
+    if (storedToken && storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setIsLoggedIn(true);
+      } catch (e) {
+        console.error("Error recuperando sesión", e);
+        // Si falla, limpiamos
+        localStorage.removeItem('token');
+        localStorage.removeItem('user_data');
+      }
+    }
+  }, []);
+
   const signin = async (userData) => {
     try {
-      const res = await loginRequest(userData); // llamada HTTP
+      const res = await loginRequest(userData);
+      
+      // 1. Guardamos el usuario en el Estado Global
+      setUser(res.data); 
       setIsLoggedIn(true);
-      // opcional: setUser(res.data.user) si el backend devuelve el usuario
+      
+      // 2. Guardamos datos en LocalStorage para que no se pierdan al recargar
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user_data', JSON.stringify(res.data));
+      
       return res;
     } catch (error) {
-      // guardar mensaje de error para mostrar en la UI
-      setErrors(error?.response?.data?.message || [error.message]);
+      if (Array.isArray(error.response.data)) {
+        return setErrors(error.response.data);
+      }
+      setErrors([error.response.data.message]);
       throw error;
     }
   };
 
-  // signout: limpia el estado de autenticación localmente.
   const signout = () => {
     setUser(null);
     setIsLoggedIn(false);
     setErrors([]);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user_data');
   };
 
   return (

@@ -1,5 +1,3 @@
-// Componente Login: formulario simple que usa react-hook-form y el contexto Auth
-// Nota: `signin(data)` devuelve una promesa; maneja errores si necesitas feedback.
 import { useForm } from 'react-hook-form'
 import { useAuth } from '../context/AuthContext'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -10,13 +8,18 @@ function Login() {
   const { register, handleSubmit } = useForm();
 
   // onSubmit pasa los datos al contexto de auth.
-  // Si quieres mostrar carga o errores, envuelve signin en try/catch.
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await signin(data)
+      // 1. Intentamos loguear con el backend
+      const res = await signin(data);
+      
+      // 2. IMPORTANTE: Si el login es exitoso, guardamos el token
+      // Esto es lo que permite que el usuario tenga "permiso" para ver datos
+      if (res && res.data && res.data.token) {
+        localStorage.setItem('token', res.data.token);
+      }
+      
     } catch (e) {
-      // signin ya guarda errores en el contexto; aquí solo opcionalmente puedes
-      // hacer logging o mostrar mensajes locales.
       console.error('Login falló:', e)
     }
   });
@@ -24,10 +27,8 @@ function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        {/* Header */}
+        {/* Header con Logo */}
         <div className="text-center mb-8">
-
-          
           <div className="w-20 h-20 mx-auto rounded-full border-2 border-blue-200 overflow-hidden">
             <img 
               src="/condominio_.jpeg" 
@@ -35,7 +36,6 @@ function Login() {
               className="w-full h-full object-cover" 
             />
           </div>
-          {/* Fin del cambio */}
 
           <h1 className="text-3xl font-bold text-gray-800 mb-2 mt-4">EspacioAdmin</h1>
           <p className="text-gray-600">Gestión de Condominios</p>

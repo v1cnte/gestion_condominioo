@@ -6,14 +6,16 @@ import {
   updateGasto,
   deleteGasto
 } from '../controllers/gastoControlador.js';
+import { authRequired, tieneRol } from '../middlewares/authMiddleware.js';
 
-const router = Router()
+const router = Router();
 
-// Rutas de gastos — CRUD: listar, ver, crear, actualizar, eliminar
-router.get('/gastos', getGastos);
-router.get('/gastos/:id', getGasto);
-router.post('/gastos', createGasto);
-router.put('/gastos/:id', updateGasto);
-router.delete('/gastos/:id', deleteGasto);
+router.get('/gastos', authRequired, getGastos);
+router.get('/gastos/:id', authRequired, getGasto);
+
+// Solo Admin y Super Admin pueden tocar el dinero
+router.post('/gastos', authRequired, tieneRol(['admin', 'super_admin']), createGasto);
+router.put('/gastos/:id', authRequired, tieneRol(['admin', 'super_admin']), updateGasto);
+router.delete('/gastos/:id', authRequired, tieneRol(['admin', 'super_admin']), deleteGasto);
 
 export default router;

@@ -1,32 +1,50 @@
-import express from 'express'
-import morgan from 'morgan' // logger de solicitudes http
-import cors from 'cors'     // middleware para habilitar cors
+import express from 'express';
+import morgan from 'morgan';
+import cors from 'cors';
+import path from 'path'; 
+import { fileURLToPath } from 'url';
 
-// importación de rutas
-import authRutas from './routes/authRutas.js'
-import multasRutas from './routes/multasRutas.js'
-import gastoRutas from './routes/gastoRutas.js'
-import reservaRutas from './routes/reservaRutas.js'
-import faqRutas from './routes/faqRutas.js'           
-import consultaRutas from './routes/consultaRutas.js' 
+// Importamos la función de configuración inicial (Semilla)
+import { createRolesAndAdmin } from './libs/initialSetup.js';
 
-const app = express()
+// Importación de rutas
+import authRutas from './routes/authRutas.js';
+import multasRutas from './routes/multasRutas.js';
+import gastoRutas from './routes/gastoRutas.js';
+import reservaRutas from './routes/reservaRutas.js';
+import faqRutas from './routes/faqRutas.js';           
+import consultaRutas from './routes/consultaRutas.js'; 
+import pagoRutas from './routes/pagoRutas.js'; 
+import reporteRutas from './routes/reporteRutas.js'; 
 
-// configuración de middlewares
+const app = express();
+
+// Configuración para __dirname en ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Ejecutar la creación de roles y admin por defecto al iniciar
+createRolesAndAdmin();
+
+// Configuración de middlewares
 app.use(cors({
-  origin: 'http://localhost:5173', // url del frontend
+  origin: 'http://localhost:5173', // URL del frontend
   credentials: true
-}))
-app.use(morgan('dev'))
-app.use(express.json()) // parser para solicitudes json
+}));
+app.use(morgan('dev'));
+app.use(express.json()); 
 
-// registro de rutas de la api
-// todas las rutas comenzarán con /api
-app.use('/api', authRutas)
-app.use('/api', multasRutas)
-app.use('/api', gastoRutas)
-app.use('/api', reservaRutas)
-app.use('/api', faqRutas)           
-app.use('/api', consultaRutas) 
+// Configurar carpeta uploads como pública (para ver las fotos de los comprobantes)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-export default app
+// Registro de rutas de la API
+app.use('/api', authRutas);
+app.use('/api', multasRutas);
+app.use('/api', gastoRutas);
+app.use('/api', reservaRutas);
+app.use('/api', faqRutas);           
+app.use('/api', consultaRutas);
+app.use('/api', pagoRutas);
+app.use('/api', reporteRutas);
+
+export default app;

@@ -4,3 +4,15 @@
   padding: 0;
   box-sizing: border-box;
 }
+@media print {
+  body { 
+    -webkit-print-color-adjust: exact; 
+    print-color-adjust: exact; 
+    background-color: white !important; 
+  }
+  /* Oculta barras de desplazamiento feas */
+  ::-webkit-scrollbar { display: none; }
+  
+  /* Asegura que los gráficos ocupen el ancho correcto */
+  canvas { max-width: 100% !important; height: auto !important; }
+}

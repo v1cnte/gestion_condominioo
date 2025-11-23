@@ -1,26 +1,24 @@
-// src/components/Reservas.jsx
-
-import { useState, useEffect } from 'react'; // importamos useEffect
+import { useState, useEffect } from 'react';
 import { useNotificaciones } from '../context/NotificacionesContext';
-import { useReservas } from '../context/ReservasContext'; // importamos el contexto de reservas
+import { useReservas } from '../context/ReservasContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPlus, 
   faTrash, 
   faSearch, 
   faCalendarCheck,
-  faMapMarkerAlt
+  faMapMarkerAlt,
+  faCheck // <--- Importamos el icono de check
 } from '@fortawesome/free-solid-svg-icons';
 
 function Reservas() {
-  const { notificarNuevaReserva } = useNotificaciones();
+  const { notificarNuevaReserva, notificarCambioEstado } = useNotificaciones();
   
-  // obtenemos los datos y funciones del contexto
-  const { reservas, getReservas, createReserva, deleteReserva } = useReservas();
+  // Traemos updateReserva del contexto
+  const { reservas, getReservas, createReserva, deleteReserva, updateReserva } = useReservas();
 
   const [showAddForm, setShowAddForm] = useState(false);
   
-  // estado inicial de una nueva reserva
   const [nuevaReserva, setNuevaReserva] = useState({
     unidad: '',
     residente: '',
@@ -33,10 +31,9 @@ function Reservas() {
 
   const [filtro, setFiltro] = useState('');
 
-  // carga las reservas al montar el componente
   useEffect(() => {
-    getReservas(); // carga las reservas desde la base de datos
-  }, []); // ejecutar solo al montar
+    getReservas();
+  }, []);
 
   const espaciosDisponibles = [
     'Salón de Eventos',
@@ -46,15 +43,12 @@ function Reservas() {
     'Piscina'
   ];
 
-  // maneja el envío del formulario de nueva reserva
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (nuevaReserva.unidad && nuevaReserva.residente && nuevaReserva.espacio && 
         nuevaReserva.fecha && nuevaReserva.horaInicio && nuevaReserva.horaFin) {
       
-      // Guardamos la nueva reserva en la base de datos
       await createReserva(nuevaReserva);
-      
       notificarNuevaReserva(nuevaReserva.unidad, nuevaReserva.espacio);
       
       setNuevaReserva({
@@ -70,15 +64,24 @@ function Reservas() {
     }
   };
 
-  // maneja la eliminación de una reserva
-  const eliminarReserva = async (id) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta reserva?')) {
-      // Eliminamos la reserva de la base de datos
-      await deleteReserva(id);
+  // --- NUEVA FUNCIÓN: Confirmar Reserva ---
+  const confirmarReserva = async (reserva) => {
+    if (window.confirm(`¿Desea confirmar la reserva de ${reserva.espacio} para la unidad ${reserva.unidad}?`)) {
+      // Enviamos el objeto con el estado cambiado a "Confirmada"
+      await updateReserva(reserva._id, { ...reserva, estado: 'Confirmada' });
+      
+      // Opcional: Notificación visual
+      if (notificarCambioEstado) {
+        notificarCambioEstado('info', `Reserva confirmada para la unidad ${reserva.unidad}`);
+      }
     }
   };
 
-  // lógica de filtrado y renderizado
+  const eliminarReserva = async (id) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta reserva?')) {
+      await deleteReserva(id);
+    }
+  };
 
   const reservasFiltradas = reservas.filter(reserva => {
     return reserva.unidad.includes(filtro) ||
@@ -116,7 +119,7 @@ function Reservas() {
         </div>
       </div>
 
-      {/* Resumen simple */}
+      {/* Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-blue-50 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
@@ -135,142 +138,64 @@ function Reservas() {
         </div>
       </div>
 
-      {/* Modal para Agregar Reserva */}
+      {/* Modal Agregar */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-gray-800">Agregar Nueva Reserva</h2>
-              <button
-                onClick={() => setShowAddForm(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
+              <button onClick={() => setShowAddForm(false)} className="text-gray-500 hover:text-gray-700">✕</button>
             </div>
-
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Unidad *
-                  </label>
-                  <input
-                    type="text"
-                    value={nuevaReserva.unidad}
-                    onChange={(e) => setNuevaReserva({...nuevaReserva, unidad: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ej: 304"
-                    required
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Unidad *</label>
+                  <input type="text" value={nuevaReserva.unidad} onChange={(e) => setNuevaReserva({...nuevaReserva, unidad: e.target.value})} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500" placeholder="Ej: 304" required />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Residente *
-                  </label>
-                  <input
-                    type="text"
-                    value={nuevaReserva.residente}
-                    onChange={(e) => setNuevaReserva({...nuevaReserva, residente: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Nombre del residente"
-                    required
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Residente *</label>
+                  <input type="text" value={nuevaReserva.residente} onChange={(e) => setNuevaReserva({...nuevaReserva, residente: e.target.value})} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500" placeholder="Nombre del residente" required />
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Espacio *
-                </label>
-                <select
-                  value={nuevaReserva.espacio}
-                  onChange={(e) => setNuevaReserva({...nuevaReserva, espacio: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
+                <label className="block text-sm font-medium text-gray-700 mb-1">Espacio *</label>
+                <select value={nuevaReserva.espacio} onChange={(e) => setNuevaReserva({...nuevaReserva, espacio: e.target.value})} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500" required>
                   <option value="">Seleccionar espacio</option>
                   {espaciosDisponibles.map((espacio, index) => (
                     <option key={index} value={espacio}>{espacio}</option>
                   ))}
                 </select>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Fecha *
-                  </label>
-                  <input
-                    type="date"
-                    value={nuevaReserva.fecha}
-                    onChange={(e) => setNuevaReserva({...nuevaReserva, fecha: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
+                  <input type="date" value={nuevaReserva.fecha} onChange={(e) => setNuevaReserva({...nuevaReserva, fecha: e.target.value})} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500" required />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Hora Inicio *
-                  </label>
-                  <input
-                    type="time"
-                    value={nuevaReserva.horaInicio}
-                    onChange={(e) => setNuevaReserva({...nuevaReserva, horaInicio: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hora Inicio *</label>
+                  <input type="time" value={nuevaReserva.horaInicio} onChange={(e) => setNuevaReserva({...nuevaReserva, horaInicio: e.target.value})} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500" required />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Hora Fin *
-                  </label>
-                  <input
-                    type="time"
-                    value={nuevaReserva.horaFin}
-                    onChange={(e) => setNuevaReserva({...nuevaReserva, horaFin: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hora Fin *</label>
+                  <input type="time" value={nuevaReserva.horaFin} onChange={(e) => setNuevaReserva({...nuevaReserva, horaFin: e.target.value})} className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500" required />
                 </div>
               </div>
-
               <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Agregar Reserva
-                </button>
+                <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancelar</button>
+                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Agregar Reserva</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Tabla de Reservas */}
+      {/* Tabla */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Lista de Reservas</h2>
           <div className="flex items-center gap-2">
             <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
-            <input
-              type="text"
-              value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
-              placeholder="Buscar reservas..."
-              className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input type="text" value={filtro} onChange={(e) => setFiltro(e.target.value)} placeholder="Buscar reservas..." className="px-3 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500" />
           </div>
         </div>
         
@@ -288,7 +213,6 @@ function Reservas() {
               </tr>
             </thead>
             <tbody>
-              {/* listado de reservas desde la base de datos */}
               {reservasFiltradas.map((reserva) => (
                 <tr key={reserva._id} className="bg-white border-b hover:bg-gray-50">
                   <td className="px-6 py-4 font-medium text-gray-900">{reserva.unidad}</td>
@@ -307,12 +231,27 @@ function Reservas() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <button 
-                      onClick={() => eliminarReserva(reserva._id)} // usa el id de mongodb
-                      className="text-red-600 hover:text-red-800 transition-colors"
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
+                    <div className="flex gap-2">
+                      {/* Botón de Confirmar (Solo si está pendiente) */}
+                      {reserva.estado === 'Pendiente' && (
+                        <button 
+                          onClick={() => confirmarReserva(reserva)}
+                          className="text-green-600 hover:text-green-800 transition-colors"
+                          title="Confirmar Reserva"
+                        >
+                          <FontAwesomeIcon icon={faCheck} />
+                        </button>
+                      )}
+                      
+                      {/* Botón Eliminar */}
+                      <button 
+                        onClick={() => eliminarReserva(reserva._id)}
+                        className="text-red-600 hover:text-red-800 transition-colors"
+                        title="Eliminar"
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -322,8 +261,7 @@ function Reservas() {
 
         {reservasFiltradas.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            {/* Mensaje actualizado */}
-            No hay reservas registradas en la base de datos.
+            No hay reservas registradas.
           </div>
         )}
       </div>

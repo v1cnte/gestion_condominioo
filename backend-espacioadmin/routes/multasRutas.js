@@ -6,14 +6,20 @@ import {
   updateMulta,
   deleteMulta
 } from '../controllers/multasControlador.js';
+// IMPORTANTE: Traemos al "portero"
+import { authRequired, tieneRol } from '../middlewares/authMiddleware.js';
 
-const router = Router()
+const router = Router();
 
-// Rutas de multas — listar, ver por id, crear, actualizar y eliminar
-router.get('/multas', getMultas);
-router.get('/multas/:id', getMulta);
-router.post('/multas', createMulta);
-router.put('/multas/:id', updateMulta);
-router.delete('/multas/:id', deleteMulta);
+// Rutas Públicas (Solo Lectura para quien tenga Token)
+// "authRequired" asegura que al menos haya iniciado sesión
+router.get('/multas', authRequired, getMultas);
+router.get('/multas/:id', authRequired, getMulta);
+
+// Rutas Protegidas (Solo Admin y Directiva)
+// "tieneRol" asegura que sea del equipo autorizado
+router.post('/multas', authRequired, tieneRol(['admin', 'directiva', 'super_admin']), createMulta);
+router.put('/multas/:id', authRequired, tieneRol(['admin', 'directiva', 'super_admin']), updateMulta);
+router.delete('/multas/:id', authRequired, tieneRol(['admin', 'super_admin']), deleteMulta);
 
 export default router;

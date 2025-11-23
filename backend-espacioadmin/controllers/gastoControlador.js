@@ -13,8 +13,9 @@ export const getGastos = async (req, res) => {
 // Crear gasto — guarda un gasto nuevo con concepto, monto y fecha.
 export const createGasto = async (req, res) => {
   try {
-    const { concepto, monto, fecha, tipo, estado } = req.body;
+    const { unidad, concepto, monto, fecha, tipo, estado } = req.body;
     const newGasto = new Gasto({
+      unidad,
       concepto,
       monto,
       fecha,

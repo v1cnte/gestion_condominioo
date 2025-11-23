@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 
-// 1. Importamos los contextos 
+// Contextos
 import { AuthProvider, useAuth } from './context/AuthContext' 
 import { NotificacionesProvider } from './context/NotificacionesContext'
 import { MultasProvider } from './context/MultasContext'
@@ -10,7 +10,7 @@ import { UsuariosProvider } from './context/UsuariosContext'
 import { FaqProvider } from './context/FaqContext'
 import { ConsultaProvider } from './context/ConsultaContext'
 
-// 2. Importamos las vistas (componentes principales)
+// Componentes
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 import Layout from './components/Layout'
@@ -22,9 +22,9 @@ import Reportes from './components/Reportes'
 import Usuarios from './components/Usuarios'
 import Configuracion from './components/Configuracion'
 import Notificaciones from './components/Notificaciones'
+import Pagos from './components/Pagos'
 import './App.css'
 
-// Decide qué mostrar: formulario de login o la app 
 function AppRoutes() {
   const { isLoggedIn, user, signout } = useAuth(); 
 
@@ -37,10 +37,15 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard user={user} />} />
+        
+        {/* Rutas principales */}
         <Route path="/condominios" element={<Condominios />} />
         <Route path="/gastos-comunes" element={<GastosComunes />} />
+        <Route path="/pagos" element={<Pagos />} />
         <Route path="/multas" element={<Multas />} />
         <Route path="/reservas" element={<Reservas />} />
+        
+        {/* Rutas de gestión */}
         <Route path="/reportes" element={<Reportes />} />
         <Route path="/usuarios" element={<Usuarios />} />
         <Route path="/configuracion" element={<Configuracion />} />
@@ -50,8 +55,6 @@ function AppRoutes() {
   );
 }
 
-// 3. Registramos los Providers
-// Los providers envuelven la app y comparten estado entre componentes
 function App() {
   return (
     <AuthProvider> 

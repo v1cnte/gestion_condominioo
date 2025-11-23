@@ -1,7 +1,10 @@
 import mongoose from "mongoose";
 
-// Modelo Gasto — concepto, monto, fecha, tipo y estado
 const gastoSchema = new mongoose.Schema({
+  unidad: { // <--- NUEVO CAMPO IMPORTANTE
+    type: String,
+    required: true, 
+  },
   concepto: {
     type: String,
     required: true,

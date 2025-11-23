@@ -1,5 +1,3 @@
-// src/components/Multas.jsx
-
 import { useState, useEffect } from 'react'; // <-- 1. IMPORTA useEffect
 import { useNotificaciones } from '../context/NotificacionesContext';
 import { useMultas } from '../context/MultasContext'; // <-- 2. IMPORTA EL HOOK (contexto)

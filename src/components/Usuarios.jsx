@@ -1,349 +1,280 @@
-// src/components/Usuarios.jsx
-
 import { useState, useEffect } from 'react';
-import { useUsuarios } from '../context/UsuariosContext'; // <-- 1. IMPORTA EL HOOK (contexto)
+import { useUsuarios } from '../context/UsuariosContext';
+import { useAuth } from '../context/AuthContext'; // <--- 1. IMPORTANTE: Para saber quién eres
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faPlus, 
   faEdit, 
   faTrash, 
   faSearch, 
   faUsers,
-  faEnvelope,
-  faPhone,
-  faHome
+  faUserPlus,
+  faUserTie,
+  faHome,
+  faIdBadge
 } from '@fortawesome/free-solid-svg-icons';
 
 function Usuarios() {
+  const { usuarios, getUsuarios, deleteUsuario, updateUsuario, createUsuario } = useUsuarios();
+  const { user } = useAuth(); // <--- 2. Obtenemos tus datos de sesión
   
-  // --- 2. TRAEMOS TODO DESDE EL HOOK (contexto) ---
-  const { usuarios, getUsuarios, deleteUsuario, updateUsuario } = useUsuarios();
-  
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  
-  // --- BORRAMOS EL 'useState' CON DATOS FALSOS ---
+  const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  const [formUsuario, setFormUsuario] = useState({
+  const [formData, setFormData] = useState({
     nombre: '',
     email: '',
+    password: '',
     unidad: '',
-    rol: 'Residente'
+    rol: 'residente'
   });
 
   const [filtro, setFiltro] = useState('');
-  const [filtroRol, setFiltroRol] = useState('');
-  
-  // --- 3. CARGAMOS LOS USUARIOS DE LA BD AL ABRIR ---
+
+  // 3. DEFINIMOS QUIÉN ES JEFE
+  // Solo 'admin' y 'super_admin' verán los botones.
+  const esAdmin = ['admin', 'super_admin'].includes(user?.rol);
+
   useEffect(() => {
-    getUsuarios(); // "Llama" al cocinero para traer los usuarios
+    getUsuarios();
   }, []);
 
-  const roles = ['Residente', 'Administrador', 'Conserje', 'Directiva', 'super_admin'];
+  const roles = [
+    { value: 'residente', label: 'Residente' },
+    { value: 'admin', label: 'Administrador' },
+    { value: 'conserje', label: 'Conserje' },
+    { value: 'directiva', label: 'Directiva' },
+    { value: 'super_admin', label: 'Super Admin' }
+  ];
 
-  // (El 'handleSubmit' para crear usuarios ya está en authControlador.js, 
-  // pero podríamos añadir un 'crearUsuario' aquí si quisiéramos)
+  const handleOpenCreate = () => {
+    setIsEditing(false);
+    setFormData({ nombre: '', email: '', password: '', unidad: '', rol: 'residente' });
+    setShowModal(true);
+  };
 
-  // función para abrir el modal de editar
-  const handleEdit = (user) => {
-    setEditingUser(user);
-    setFormUsuario({
-      nombre: user.nombre,
-      email: user.email,
-      unidad: user.unidad,
-      rol: user.rol
+  const handleOpenEdit = (userEdit) => {
+    setIsEditing(true);
+    setCurrentUser(userEdit);
+    setFormData({
+      nombre: userEdit.nombre,
+      email: userEdit.email,
+      password: '',
+      unidad: userEdit.unidad || '',
+      rol: userEdit.rol
     });
-    setShowEditForm(true);
+    setShowModal(true);
   };
 
-  // --- 4. ACTUALIZAMOS EL 'handleUpdate' ---
-  const handleUpdate = async (e) => { // Lo hacemos 'async'
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formUsuario.nombre && formUsuario.email && formUsuario.unidad) {
-      
-  // ¡Aquí "llamamos" al hook (contexto) para que actualice en la BD!
-  await updateUsuario(editingUser._id, formUsuario);
-      
-      setFormUsuario({
-        nombre: '',
-        email: '',
-        unidad: '',
-        rol: 'Residente'
-      });
-      setShowEditForm(false);
-      setEditingUser(null);
+    if (isEditing) {
+      await updateUsuario(currentUser._id, formData);
+    } else {
+      if (!formData.password) return alert("La contraseña es obligatoria");
+      await createUsuario(formData);
+    }
+    setShowModal(false);
+    getUsuarios();
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('¿Eliminar usuario permanentemente?')) {
+      await deleteUsuario(id);
     }
   };
 
-  // --- 5. ACTUALIZAMOS EL 'eliminarUsuario' ---
-  const eliminarUsuario = async (id) => { // Lo hacemos 'async'
-    if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
-  // ¡Aquí "llamamos" al hook (contexto) para que borre de la BD!
-  await deleteUsuario(id);
-    }
+  const getRolBadge = (rol) => {
+    const styles = {
+      'super_admin': 'bg-purple-100 text-purple-800 border-purple-200',
+      'admin': 'bg-blue-100 text-blue-800 border-blue-200',
+      'conserje': 'bg-orange-100 text-orange-800 border-orange-200',
+      'directiva': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'residente': 'bg-green-100 text-green-800 border-green-200',
+    };
+    return styles[rol?.toLowerCase()] || 'bg-gray-100 text-gray-800';
   };
 
-  // --- De aquí para abajo, todo el código de filtrado y JSX es IGUAL ---
+  const usuariosFiltrados = usuarios.filter(u => 
+    u.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
+    (u.unidad && u.unidad.includes(filtro))
+  );
 
-  const usuariosFiltrados = usuarios.filter(usuario => {
-    const coincideTexto = usuario.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
-      usuario.email.toLowerCase().includes(filtro.toLowerCase()) ||
-      (usuario.unidad && usuario.unidad.toLowerCase().includes(filtro.toLowerCase()));
-    
-    const coincideRol = filtroRol === '' || usuario.rol === filtroRol;
-    
-    return coincideTexto && coincideRol;
-  });
-
-  const totalUsuarios = usuarios.length;
-  const usuariosActivos = usuarios.filter(u => u.estado === 'Activo').length; // (El estado aún no lo implementamos, pero lo dejamos)
-  const administradores = usuarios.filter(u => u.rol === 'Administrador' || u.rol === 'super_admin').length;
-  const residentes = usuarios.filter(u => u.rol === 'Residente').length;
-
-  const getRolColor = (rol) => {
-    switch (rol) {
-      case 'Administrador': return 'bg-red-100 text-red-800';
-      case 'super_admin': return 'bg-purple-100 text-purple-800';
-      case 'Conserje': return 'bg-blue-100 text-blue-800';
-      case 'Directiva': return 'bg-yellow-100 text-yellow-800';
-      case 'Residente': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const totalUsers = usuarios.length;
+  const staffCount = usuarios.filter(u => ['admin', 'super_admin', 'conserje'].includes(u.rol)).length;
+  const residentCount = usuarios.filter(u => u.rol === 'residente').length;
 
   return (
     <div className="p-6">
-      {/* header del componente */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
+      <div className="mb-6 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Directorio de Usuarios</h1>
+          <p className="text-gray-600">Administra el acceso y roles de la comunidad</p>
+        </div>
+        
+        {/* 4. PROTECCIÓN VISUAL: Botón Nuevo Usuario */}
+        {esAdmin && (
+          <button 
+            onClick={handleOpenCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+          >
+            <FontAwesomeIcon icon={faUserPlus} /> Nuevo Usuario
+          </button>
+        )}
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Usuarios</h1>
-            <p className="text-gray-600">Gestión de residentes y personal del condominio</p>
+            <p className="text-gray-500 text-sm">Total Usuarios</p>
+            <p className="text-2xl font-bold text-gray-800">{totalUsers}</p>
           </div>
-          {/* (Opcional: Podríamos hacer un modal 'Agregar Usuario' que llame a 'registroRequest') */}
+          <div className="p-3 bg-gray-100 rounded-full text-gray-600"><FontAwesomeIcon icon={faUsers} /></div>
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between">
+          <div>
+            <p className="text-gray-500 text-sm">Staff (Admin/Conserje)</p>
+            <p className="text-2xl font-bold text-blue-600">{staffCount}</p>
+          </div>
+          <div className="p-3 bg-blue-50 rounded-full text-blue-600"><FontAwesomeIcon icon={faIdBadge} /></div>
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between">
+          <div>
+            <p className="text-gray-500 text-sm">Residentes</p>
+            <p className="text-2xl font-bold text-green-600">{residentCount}</p>
+          </div>
+          <div className="p-3 bg-green-50 rounded-full text-green-600"><FontAwesomeIcon icon={faUserTie} /></div>
         </div>
       </div>
 
-      {/* tarjetas de estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {/* ... (Las tarjetas de resumen siguen funcionando igual) ... */}
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <FontAwesomeIcon icon={faUsers} className="text-blue-600" />
-            <h3 className="font-semibold text-blue-800">Total Usuarios</h3>
+      {/* Tabla */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <div className="relative max-w-md">
+            <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-3 text-gray-400" />
+            <input 
+              type="text" 
+              placeholder="Buscar por nombre o unidad..." 
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              value={filtro}
+              onChange={e => setFiltro(e.target.value)}
+            />
           </div>
-          <p className="text-2xl font-bold text-blue-600">{totalUsuarios}</p>
         </div>
-        <div className="bg-green-50 rounded-lg p-4">
-          <h3 className="font-semibold text-green-800 mb-2">Activos</h3>
-          <p className="text-2xl font-bold text-green-600">{usuariosActivos}</p>
-        </div>
-        <div className="bg-red-50 rounded-lg p-4">
-          <h3 className="font-semibold text-red-800 mb-2">Staff</h3>
-          <p className="text-2xl font-bold text-red-600">{administradores}</p>
-        </div>
-        <div className="bg-purple-50 rounded-lg p-4">
-          <h3 className="font-semibold text-purple-800 mb-2">Residentes</h3>
-          <p className="text-2xl font-bold text-purple-600">{residentes}</p>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3">Usuario</th>
+                <th className="px-6 py-3">Rol</th>
+                <th className="px-6 py-3">Unidad</th>
+                <th className="px-6 py-3">Registro</th>
+                {/* 5. PROTECCIÓN VISUAL: Encabezado "Acciones" */}
+                {esAdmin && <th className="px-6 py-3 text-right">Acciones</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {usuariosFiltrados.map((u) => (
+                <tr key={u._id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-lg">
+                        {u.nombre.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{u.nombre}</div>
+                        <div className="text-gray-500 text-xs">{u.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getRolBadge(u.rol)}`}>
+                      {roles.find(r => r.value === u.rol)?.label || u.rol}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <FontAwesomeIcon icon={faHome} className="text-gray-400" />
+                      {u.unidad || '-'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-gray-500">
+                    {new Date(u.createdAt).toLocaleDateString()}
+                  </td>
+                  
+                  {/* 6. PROTECCIÓN VISUAL: Botones Editar/Borrar */}
+                  {esAdmin && (
+                    <td className="px-6 py-4 text-right">
+                      <button onClick={() => handleOpenEdit(u)} className="text-blue-600 hover:text-blue-800 mx-2">
+                        <FontAwesomeIcon icon={faEdit} />
+                      </button>
+                      <button onClick={() => handleDelete(u._id)} className="text-red-600 hover:text-red-800 mx-2">
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* modal para editar usuario */}
-      {showEditForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Editar Usuario</h2>
-              <button
-                onClick={() => {
-                  setShowEditForm(false);
-                  setEditingUser(null);
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
+      {/* Modal (Protección extra: Solo se renderiza si es Admin) */}
+      {showModal && esAdmin && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
+            {/* ... Contenido del modal (formulario) ... */}
+            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="font-bold text-gray-800">{isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}</h3>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
             </div>
-
-            <form onSubmit={handleUpdate} className="space-y-4">
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {/* Campos del formulario... */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre Completo *
-                </label>
-                <input
-                  type="text"
-                  value={formUsuario.nombre}
-                  onChange={(e) => setFormUsuario({...formUsuario, nombre: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                <input type="text" required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                  value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  value={formUsuario.email}
-                  onChange={(e) => setFormUsuario({...formUsuario, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                  value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {!isEditing && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Unidad *
-                  </label>
-                  <input
-                    type="text"
-                    value={formUsuario.unidad}
-                    onChange={(e) => setFormUsuario({...formUsuario, unidad: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                  <input type="password" required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
                 </div>
-
+              )}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Rol *
-                  </label>
-                  <select
-                    value={formUsuario.rol}
-                    onChange={(e) => setFormUsuario({...formUsuario, rol: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    {roles.map((rol, index) => (
-                      <option key={index} value={rol}>{rol}</option>
-                    ))}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Unidad</label>
+                  <input type="text" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                    value={formData.unidad} onChange={e => setFormData({...formData, unidad: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                  <select className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+                    value={formData.rol} onChange={e => setFormData({...formData, rol: e.target.value})}>
+                    {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                   </select>
                 </div>
               </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowEditForm(false);
-                    setEditingUser(null);
-                  }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Actualizar Usuario
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Cancelar</button>
+                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  {isEditing ? 'Guardar Cambios' : 'Crear Usuario'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* tabla de usuarios */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Lista de Usuarios</h2>
-          
-          {/* filtros */}
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
-              <input
-                type="text"
-                value={filtro}
-                onChange={(e) => setFiltro(e.target.value)}
-                placeholder="Buscar usuarios..."
-                className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <select
-              value={filtroRol}
-              onChange={(e) => setFiltroRol(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todos los roles</option>
-              {roles.map((rol, index) => (
-                <option key={index} value={rol}>{rol}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-500">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-              <tr>
-                <th className="px-6 py-3">Usuario</th>
-                <th className="px-6 py-3">Email</th>
-                <th className="px-6 py-3">Unidad</th>
-                <th className="px-6 py-3">Rol</th>
-                <th className="px-6 py-3">Registro</th>
-                <th className="px-6 py-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* ¡Esto ahora leerá los usuarios de la BD! */}
-              {usuariosFiltrados.map((usuario) => (
-                <tr key={usuario._id} className="bg-white border-b hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <p className="font-medium text-gray-900">{usuario.nombre}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm">
-                        <FontAwesomeIcon icon={faEnvelope} className="text-gray-400" />
-                        <span>{usuario.email}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <FontAwesomeIcon icon={faHome} className="text-blue-600" />
-                      <span className="font-medium">{usuario.unidad}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${getRolColor(usuario.rol)}`}>
-                      {usuario.rol}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">{new Date(usuario.createdAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => handleEdit(usuario)}
-                        className="text-blue-600 hover:text-blue-800 transition-colors"
-                        title="Editar usuario"
-                      >
-                        <FontAwesomeIcon icon={faEdit} />
-                      </button>
-                      <button 
-                        onClick={() => eliminarUsuario(usuario._id)}
-                        className="text-red-600 hover:text-red-800 transition-colors"
-                        title="Eliminar usuario"
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {usuariosFiltrados.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No se encontraron usuarios que coincidan con los filtros aplicados.
-          </div>
-        )}
-      </div>
     </div>
   );
 }
