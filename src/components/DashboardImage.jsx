@@ -8,7 +8,7 @@ const DashboardImage = ({ src, alt, icon, title }) => {
     setImageError(true);
   };
 
-  // Función para determinar el color de fondo basado en el título
+  /* Funcinon que determina el estilo de gradiente de fondo basado en el t\u00edtulo del componente */
   const getBackgroundGradient = (title) => {
     if (title.toLowerCase().includes('dinero') || title.toLowerCase().includes('gasto')) {
       return 'from-green-50 to-green-100 border-green-200';

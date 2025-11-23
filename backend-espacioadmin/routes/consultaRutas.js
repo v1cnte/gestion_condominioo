@@ -3,7 +3,7 @@ import { createConsulta, getConsultas } from '../controllers/consultaControlador
 
 const router = Router()
 
-// Rutas de consultas: crear una consulta y listar todas
+/* Rutas para la gestión de consultas: crear nuevas consultas y listar todas las registradas */
 router.post('/consultas', createConsulta);
 router.get('/consultas', getConsultas);
 

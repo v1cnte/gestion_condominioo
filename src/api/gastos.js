@@ -1,4 +1,4 @@
-import axios from './axios.js' // instancia axios con baseURL y opciones
+import axios from './axios.js' /* Instancia de axios preconfigurada con baseURL y opciones */
 
 export const getGastosRequest = () => axios.get('/gastos')
 export const getGastoRequest = (id) => axios.get(`/gastos/${id}`)

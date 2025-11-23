@@ -7,14 +7,14 @@ function Login() {
   const { signin, errors: loginErrors } = useAuth();
   const { register, handleSubmit } = useForm();
 
-  // onSubmit pasa los datos al contexto de auth.
+  /* Función que maneja el envío del formulario de inicio de sesión al contexto de autenticación */
   const onSubmit = handleSubmit(async (data) => {
     try {
-      // 1. Intentamos loguear con el backend
+      /* Se intenta autenticar el usuario con las credenciales proporcionadas */
       const res = await signin(data);
       
-      // 2. IMPORTANTE: Si el login es exitoso, guardamos el token
-      // Esto es lo que permite que el usuario tenga "permiso" para ver datos
+      /* Si la autenticación es exitosa se guarda el token en almacenamiento local */
+      /* Este token permite al usuario autenticarse en futuras peticiones al servidor */
       if (res && res.data && res.data.token) {
         localStorage.setItem('token', res.data.token);
       }

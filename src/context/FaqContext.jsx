@@ -27,7 +27,7 @@ export const FaqProvider = ({ children }) => {
         <FaqContext.Provider value={{
             faqs,
             getFaqs
-            // (Aquí puedes añadir createFaq, deleteFaq para el Admin)
+            /* Funciones adicionales createFaq y deleteFaq pueden implementarse en futuro para administradores */
         }}>
             {children}
         </FaqContext.Provider>

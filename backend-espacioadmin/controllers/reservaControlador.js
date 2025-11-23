@@ -1,6 +1,6 @@
 import Reserva from '../models/reservaModel.js';
 
-// Obtener reservas — lista todas las reservas registradas.
+/* Obtiene y retorna la lista completa de todas las reservas registradas en el sistema */
 export const getReservas = async (req, res) => {
   try {
     const reservas = await Reserva.find();
@@ -10,18 +10,18 @@ export const getReservas = async (req, res) => {
   }
 };
 
-// Crear reserva — guarda una nueva reserva con validación de disponibilidad.
+/* Crea una nueva reserva con validación automática de disponibilidad del espacio y horario */
 export const createReserva = async (req, res) => {
   try {
     const { unidad, residente, espacio, fecha, horaInicio, horaFin } = req.body;
 
-    // 1. VALIDACIÓN: Verificar si ya existe reserva en ese horario
-    // Buscamos reservas que coincidan en espacio, fecha y se solapen en hora.
-    // Lógica de solapamiento: (InicioExistente < FinNuevo) Y (FinExistente > InicioNuevo)
+    /* Se verifica que no exista una reserva confirmada en el mismo espacio, fecha y horario
+       Algoritmo de solapamiento: (InicioExistente < FinNuevo) Y (FinExistente > InicioNuevo) */
+    /* Solo se validan conflictos con reservas confirmadas, ignorando las pendientes */
     const conflicto = await Reserva.findOne({
       espacio,
       fecha,
-      estado: 'Confirmada', // Solo nos importa chocar con las confirmadas
+      estado: 'Confirmada',
       $and: [
         { horaInicio: { $lt: horaFin } },
         { horaFin: { $gt: horaInicio } }
@@ -32,7 +32,7 @@ export const createReserva = async (req, res) => {
       return res.status(400).json({ message: ["El espacio ya está ocupado en ese horario"] });
     }
 
-    // 2. Si no hay conflicto, creamos la reserva
+    /* Se procede a crear la reserva con el estado inicial de Pendiente */
     const newReserva = new Reserva({
       unidad,
       residente,
@@ -40,7 +40,7 @@ export const createReserva = async (req, res) => {
       fecha,
       horaInicio,
       horaFin,
-      estado: 'Pendiente' // Por defecto Confirmada, o 'Pendiente' si implementas pagos
+      estado: 'Pendiente' /* Estado por defecto hasta confirmación o pago */
     });
 
     const savedReserva = await newReserva.save();
@@ -51,7 +51,7 @@ export const createReserva = async (req, res) => {
   }
 };
 
-// Obtener reserva — busca por id y devuelve la reserva (404 si no existe).
+/* Obtiene una reserva específica por su identificador único */
 export const getReserva = async (req, res) => {
   try {
     const reserva = await Reserva.findById(req.params.id);
@@ -62,7 +62,7 @@ export const getReserva = async (req, res) => {
   }
 };
 
-// Actualizar reserva — aplica los cambios y devuelve el registro actualizado.
+/* Actualiza los datos de una reserva existente y retorna el registro modificado */
 export const updateReserva = async (req, res) => {
   try {
     const reserva = await Reserva.findByIdAndUpdate(req.params.id, req.body, {
@@ -75,7 +75,7 @@ export const updateReserva = async (req, res) => {
   }
 };
 
-// Eliminar reserva — borra por id y devuelve el objeto eliminado.
+/* Elimina una reserva por su identificador y retorna el registro eliminado */
 export const deleteReserva = async (req, res) => {
   try {
     const reserva = await Reserva.findByIdAndDelete(req.params.id);

@@ -13,10 +13,10 @@ const router = Router();
 router.get('/reservas', authRequired, getReservas);
 router.get('/reservas/:id', authRequired, getReserva);
 
-// Crear: Residentes sí pueden reservar
+/* Rutas de creación: los residentes pueden crear nuevas reservas de espacios comunes */
 router.post('/reservas', authRequired, tieneRol(['residente', 'conserje', 'admin', 'super_admin']), createReserva);
 
-// Editar/Borrar: Residentes NO pueden borrar (solo Conserje/Admin)
+/* Rutas de actualización y eliminación: solo los administradores pueden modificar o cancelar reservas */
 router.put('/reservas/:id', authRequired, tieneRol(['conserje', 'admin', 'super_admin']), updateReserva);
 router.delete('/reservas/:id', authRequired, tieneRol(['conserje', 'admin', 'super_admin']), deleteReserva);
 

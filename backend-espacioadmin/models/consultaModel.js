@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// Modelo Consulta — guarda email, nota y el usuario que la envió
+/* Esquema de datos para gestionar las consultas y solicitudes enviadas por los usuarios */
 const consultaSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -10,7 +10,7 @@ const consultaSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  // Usuario que envió la consulta (opcional)
+  /* Referencia al usuario que realizó la consulta (opcional) */
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Usuario',

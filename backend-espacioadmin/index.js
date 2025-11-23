@@ -1,15 +1,15 @@
 import app from './app.js'
-import { connectDB } from './db.js' // Importamos la "llave"
+import { connectDB } from './db.js' /* Importa la función de conexión a la base de datos */
 import { iniciarMultasAutomaticas } from './utils/automatizacion.js';
 
 const PORT = 4000
 
-// Iniciar el proceso de multas automáticas
+/* Se inicia el proceso automático de generación de multas por morosidad */
 iniciarMultasAutomaticas();
 
-// 1. Conectamos a la base de datos
+/* Se establece la conexión con la base de datos MongoDB */
 connectDB()
 
-// 2. Iniciamos el servidor
+/* Se inicia el servidor Express en el puerto especificado */
 app.listen(PORT)
 console.log(`Servidor escuchando en el puerto ${PORT}`)

@@ -2,33 +2,33 @@ import Gasto from '../models/gastoModel.js';
 import Multa from '../models/multaModel.js';
 import Reserva from '../models/reservaModel.js';
 
-// 1. Resumen General (Para las tarjetas del Dashboard/Reportes)
+/* Genera un resumen general con KPIs para las tarjetas del dashboard y reportes mensuales */
 export const getResumen = async (req, res) => {
   try {
     const fechaInicio = new Date();
-    fechaInicio.setDate(1); // Día 1 del mes actual
+    fechaInicio.setDate(1); /* Se establece el inicio del mes actual */
     fechaInicio.setHours(0, 0, 0, 0);
 
-    // A. Sumar TOTAL de gastos registrados este mes
+    /* Calcula el monto total de gastos registrados en el mes actual */
     const gastosAgregados = await Gasto.aggregate([
       { 
         $match: { 
-          fecha: { $gte: fechaInicio } // Filtra por fecha >= 1ro del mes
+          fecha: { $gte: fechaInicio } /* Filtra gastos desde el primer día del mes */
         } 
       },
       { 
         $group: { 
           _id: null, 
-          total: { $sum: "$monto" } // Suma la columna 'monto'
+          total: { $sum: "$monto" } /* Suma todos los montos de gastos */
         } 
       }
     ]);
 
-    // B. NUEVO: Gastos por TIPO (Para el gráfico de barras)
+    /* Calcula la distribución de gastos por tipo para visualización en gráfico */
     const gastosPorTipo = await Gasto.aggregate([
       { 
         $match: { 
-          fecha: { $gte: fechaInicio } // Solo gastos de este mes
+          fecha: { $gte: fechaInicio } /* Solo gastos del mes actual */
         } 
       },
       { 
@@ -39,21 +39,21 @@ export const getResumen = async (req, res) => {
       }
     ]);
 
-    // C. Contar multas de este mes
-    // Nota: Si tu modelo Multa usa 'createdAt', cámbialo aquí. Si usa 'fecha', déjalo así.
+    /* Cuenta el total de multas registradas en el mes actual */
+    /* Nota: Si el modelo Multa utiliza createdAt, debe modificarse esta línea */
     const totalMultas = await Multa.countDocuments({ 
       fecha: { $gte: fechaInicio } 
     });
 
-    // D. Contar reservas de este mes
+    /* Cuenta el total de reservas registradas en el mes actual */
     const totalReservas = await Reserva.countDocuments({ 
       fecha: { $gte: fechaInicio } 
     });
 
-    // Responder al frontend
+    /* Retorna los datos agregados al cliente */
     res.json({
       gastosMes: gastosAgregados[0]?.total || 0,
-      gastosPorTipo: gastosPorTipo, // Array para el gráfico
+      gastosPorTipo: gastosPorTipo, /* Array con datos para visualizar en gráfico */
       multasMes: totalMultas,
       reservasMes: totalReservas
     });
@@ -64,11 +64,11 @@ export const getResumen = async (req, res) => {
   }
 };
 
-// 2. Reporte de Morosidad (Para la tabla de deudores)
+/* Genera un reporte de morosidad listando unidades deudoras con sus totales de deuda */
 export const getMorosos = async (req, res) => {
   try {
-    // Definimos "vencido" (ej: hace 30 días). 
-    // Si quieres ver todos los pendientes, comenta el filtro de fecha.
+    /* Se define un período de gracia de 30 días antes de considerar una deuda como vencida
+       Para incluir todas las deudas pendientes sin importar antigüedad, comentar el filtro de fecha */
     const fechaLimite = new Date();
     fechaLimite.setDate(fechaLimite.getDate() - 30); 
 
@@ -76,19 +76,19 @@ export const getMorosos = async (req, res) => {
       { 
         $match: { 
           estado: 'Pendiente',
-          // fecha: { $lt: fechaLimite } // Descomenta si quieres filtrar por antigüedad
+          /* fecha: { $lt: fechaLimite } - Descomenta para filtrar solo deudas antiguas */
         } 
       },
       {
-        // Agrupar por unidad para saber cuánto debe cada depto en total
+        /* Agrupa los gastos pendientes por unidad para calcular el total adeudado por departamento */
         $group: {
-          _id: "$unidad", // El número de departamento
-          totalDeuda: { $sum: "$monto" }, // Sumamos la deuda total
-          boletasPendientes: { $sum: 1 }  // Contamos cuántos gastos deben
+          _id: "$unidad", /* Identificador del departamento */
+          totalDeuda: { $sum: "$monto" }, /* Suma total adeudada por el departamento */
+          boletasPendientes: { $sum: 1 }  /* Cantidad de comprobantes de pago pendientes */
         }
       },
       { 
-        $sort: { totalDeuda: -1 } // Ordenar: los que deben más aparecen primero
+        $sort: { totalDeuda: -1 } /* Ordena descendentemente: mayores deudores primero */
       }
     ]);
 

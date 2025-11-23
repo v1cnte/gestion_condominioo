@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNotificaciones } from '../context/NotificacionesContext';
 import { useGastos } from '../context/GastosContext';
-import { useAuth } from '../context/AuthContext'; // <--- Para saber el rol
+import { useAuth } from '../context/AuthContext'; /* Se importa para validar el rol del usuario */
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPlus, 
@@ -19,11 +19,11 @@ function GastosComunes() {
   const { gastos, getGastos, createGasto, deleteGasto, updateGasto } = useGastos();
   const { user } = useAuth();
 
-  // Lógica de permisos
+  /* Se valida si el usuario tiene permiso para crear, editar y eliminar gastos */
   const esAdmin = ['admin', 'super_admin'].includes(user?.rol);
 
   const [showModal, setShowModal] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); // Saber si edito o creo
+  const [isEditing, setIsEditing] = useState(false); /* Indicador para saber si se está creando o editando */
   const [currentId, setCurrentId] = useState(null);
 
   const [formGasto, setFormGasto] = useState({
@@ -36,13 +36,13 @@ function GastosComunes() {
   });
 
   const [busqueda, setBusqueda] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState('Todos'); // Filtro nuevo
+  const [filtroEstado, setFiltroEstado] = useState('Todos'); /* Nuevo filtro por estado de pago */
 
   useEffect(() => { getGastos(); }, []);
 
   const tiposGasto = ['Mantenimiento', 'Servicios', 'Limpieza', 'Seguridad', 'Suministros', 'Otros'];
 
-  // --- CRUD ---
+  /* Funciones para operaciones CRUD de gastos comunes */
 
   const handleOpenCreate = () => {
     setIsEditing(false);
@@ -53,7 +53,7 @@ function GastosComunes() {
   const handleOpenEdit = (gasto) => {
     setIsEditing(true);
     setCurrentId(gasto._id);
-    // Formatear fecha para el input date (YYYY-MM-DD)
+    /* Se formatea la fecha al formato requerido por el input date (YYYY-MM-DD) */
     const fechaFormat = new Date(gasto.fecha).toISOString().split('T')[0];
     setFormGasto({ ...gasto, fecha: fechaFormat });
     setShowModal(true);
@@ -78,13 +78,13 @@ function GastosComunes() {
     }
   };
 
-  // --- Cambio rápido de estado (Solo Admin) ---
+  /* Función que permite cambiar rápidamente el estado de pago de un gasto solo para administradores */
   const toggleEstado = async (gasto) => {
     const nuevoEstado = gasto.estado === 'Pendiente' ? 'Pagado' : 'Pendiente';
     await updateGasto(gasto._id, { ...gasto, estado: nuevoEstado });
   };
 
-  // --- Filtros ---
+  /* Lógica de filtrado de gastos por texto y estado */
   const gastosFiltrados = gastos.filter(gasto => {
     const matchTexto = gasto.concepto.toLowerCase().includes(busqueda.toLowerCase()) ||
                        (gasto.unidad && gasto.unidad.toLowerCase().includes(busqueda.toLowerCase()));
@@ -94,7 +94,7 @@ function GastosComunes() {
     return matchTexto && matchEstado;
   });
 
-  // --- Totales ---
+  /* Cálculo de totales y estadísticas de gastos */
   const totalMonto = gastos.reduce((sum, g) => sum + g.monto, 0);
   const pendientes = gastos.filter(g => g.estado === 'Pendiente').length;
   const pagados = gastos.filter(g => g.estado === 'Pagado').length;
@@ -107,7 +107,7 @@ function GastosComunes() {
           <p className="text-gray-600">Gestión y seguimiento de cobros</p>
         </div>
         
-        {/* Solo Admin ve el botón de agregar */}
+        {/* SOLO ADMINISTRADORES VEN EL BOTÓN PARA CREAR NUEVOS GASTOS */}
         {esAdmin && (
           <button onClick={handleOpenCreate} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-colors">
             <FontAwesomeIcon icon={faPlus} /> Nuevo Cobro

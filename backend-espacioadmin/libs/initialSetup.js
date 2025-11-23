@@ -3,16 +3,16 @@ import bcrypt from 'bcryptjs';
 
 export const createRolesAndAdmin = async () => {
   try {
-    // 1. Verificar si ya existen usuarios
+    /* Se verifica si ya existen usuarios en la base de datos */
     const count = await Usuario.estimatedDocumentCount();
 
-    // Si ya hay usuarios, no hacemos nada (retornamos)
+    /* Si la base de datos ya contiene usuarios, se interrumpe la ejecución */
     if (count > 0) return;
 
-    // 2. Si no hay usuarios, creamos el Super Admin por defecto
+    /* Si la base de datos está vacía, se procede a crear el usuario Super Administrador predeterminado */
     console.log('>> Base de datos vacía. Creando Super Admin por defecto...');
 
-    // Encriptamos la contraseña "admin123" (o la que tú quieras)
+    /* Se encripta la contraseña predeterminada utilizando el algoritmo bcryptjs */
     const passwordHash = await bcrypt.hash("admin123", 10);
 
     const values = await Promise.all([
@@ -24,7 +24,7 @@ export const createRolesAndAdmin = async () => {
         unidad: "Administración"
       }).save(),
       
-      // Opcional: Crear un residente de prueba también
+      /* Sección comentada: Opcionalmente, se puede crear un usuario residente de prueba
       /*
       new Usuario({
         nombre: "Residente Ejemplo",

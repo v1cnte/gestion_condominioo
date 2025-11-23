@@ -3,7 +3,7 @@ import {
     createReservaRequest,
     getReservasRequest,
     deleteReservaRequest,
-    updateReservaRequest // <--- Importamos la petición de actualización
+    updateReservaRequest /* Se importa la función para actualizar reservas existentes */
 } from '../api/reservas.js';
 
 export const ReservasContext = createContext();
@@ -44,11 +44,11 @@ export const ReservasProvider = ({ children }) => {
         }
     };
 
-    // --- NUEVA FUNCIÓN PARA ACTUALIZAR ---
+    /* Función que permite actualizar una reserva existente */
     const updateReserva = async (id, datosActualizados) => {
         try {
             const res = await updateReservaRequest(id, datosActualizados);
-            // Actualizamos la lista localmente para que se vea el cambio sin recargar
+            /* Se actualiza el estado local para reflejar los cambios inmediatamente sin necesidad de recargar */
             setReservas(prev => prev.map(r => (r._id === id ? res.data : r)));
         } catch (error) {
             console.error(error);

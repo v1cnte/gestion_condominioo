@@ -9,7 +9,7 @@ const usuarioSchema = new mongoose.Schema({
     email: {
     type: String,
     required: true,
-    unique: true, // No se pueden repetir emails
+    unique: true /* El correo electrónico debe ser único en el sistema */,
     },
     password: {
     type: String,
@@ -18,7 +18,7 @@ const usuarioSchema = new mongoose.Schema({
     rol: {
     type: String,
     required: true,
-    // Los roles posibles
+    /* Define los roles disponibles en el sistema */
     enum: ['super_admin', 'admin', 'conserje', 'directiva', 'residente'],
     default: 'residente'
   },
@@ -26,7 +26,7 @@ const usuarioSchema = new mongoose.Schema({
     type: String
   }
 }, {
-  timestamps: true // Añade createdAt y updatedAt automáticamente
+  timestamps: true /* Genera automáticamente los campos createdAt y updatedAt */
 })
 
 export default mongoose.model('Usuario', usuarioSchema)

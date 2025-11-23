@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const gastoSchema = new mongoose.Schema({
-  unidad: { // <--- NUEVO CAMPO IMPORTANTE
+  unidad: { /* Campo esencial para identificar la unidad asociada al gasto */
     type: String,
     required: true, 
   },

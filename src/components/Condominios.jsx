@@ -75,7 +75,7 @@ function Condominios() {
           <div key={condo.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow group">
             
             <div className="h-32 bg-gray-100 relative">
-              {/* --- CAMBIO AQUÍ: IMAGEN DE UNSPLASH --- */}
+              {/* IMAGEN REPRESENTATIVA DE EDIFICIO OBTENIDA DESDE UNSPLASH */}
               <img 
                 src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop" 
                 alt="Edificio" 

@@ -26,7 +26,7 @@ function Sidebar({ isOpen, onToggle, user, onLogout }) {
     { icon: faMoneyBillWave, label: 'Pagos y Comprobantes', path: '/pagos' },
     { icon: faExclamationTriangle, label: 'Multas', path: '/multas' },
     { icon: faCalendarCheck, label: 'Reservas', path: '/reservas' },
-    // Se eliminó Libro de Eventos de aquí
+    /* Se elimin\u00f3 el \u00edtem de Libro de Eventos */
     { icon: faChartBar, label: 'Reportes', path: '/reportes' },
     { icon: faUsers, label: 'Usuarios', path: '/usuarios' },
     { icon: faCog, label: 'Configuración', path: '/configuracion' },

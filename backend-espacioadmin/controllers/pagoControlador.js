@@ -1,17 +1,17 @@
 import Pago from '../models/pagoModel.js';
 
-// Registrar un nuevo pago con archivo
+/* Registra un nuevo pago con su archivo de comprobante de transferencia */
 export const createPago = async (req, res) => {
   try {
-    // req.file viene gracias a Multer (si se subió archivo)
-    // req.body trae los datos de texto
+    /* El objeto req.file contiene la información del archivo subido por Multer
+       El objeto req.body contiene los datos de texto del formulario */
     const { unidad, residente, monto, metodo, fechaPago } = req.body;
 
     if (!req.file) {
       return res.status(400).json({ message: "Debes subir un comprobante" });
     }
 
-    // La ruta del archivo relativa al servidor
+    /* Se construye la ruta relativa del archivo almacenado en el servidor */
     const comprobanteUrl = `/uploads/${req.file.filename}`;
 
     const nuevoPago = new Pago({
@@ -31,7 +31,7 @@ export const createPago = async (req, res) => {
   }
 };
 
-// Listar todos los pagos (para Admin/Conserje)
+/* Obtiene y retorna la lista completa de pagos registrados, ordenados por fecha descendente */
 export const getPagos = async (req, res) => {
   try {
     const pagos = await Pago.find().sort({ createdAt: -1 });
@@ -41,10 +41,10 @@ export const getPagos = async (req, res) => {
   }
 };
 
-// Cambiar estado del pago (Aprobar/Rechazar)
+/* Actualiza el estado de un pago a Aprobado o Rechazado */
 export const updateEstadoPago = async (req, res) => {
   try {
-    const { estado } = req.body; // 'Aprobado' o 'Rechazado'
+    const { estado } = req.body; /* El nuevo estado: Aprobado o Rechazado */
     const pagoActualizado = await Pago.findByIdAndUpdate(
       req.params.id, 
       { estado }, 

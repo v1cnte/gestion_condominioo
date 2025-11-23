@@ -1,10 +1,10 @@
-import axios from './axios.js' // Importa el "teléfono"
+import axios from './axios.js' /* Instancia de axios preconfigurada */
 
-// "Llamada" para OBTENER todas las FAQs
+/* Obtiene todas las preguntas frecuentes desde el servidor */
 export const getFaqsRequest = () => axios.get('/faqs')
 
-// (Opcional) "Llamada" para CREAR una FAQ (para el Admin)
+/* Crea una nueva pregunta frecuente en el servidor para administradores */
 export const createFaqRequest = (faq) => axios.post('/faqs', faq)
 
-// (Opcional) "Llamada" para BORRAR una FAQ (para el Admin)
+/* Elimina una pregunta frecuente del servidor para administradores */
 export const deleteFaqRequest = (id) => axios.delete(`/faqs/${id}`)

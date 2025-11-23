@@ -12,7 +12,7 @@ import axios from '../api/axios';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 
-// Registrar componentes de Chart.js
+/* Se registran los componentes necesarios de Chart.js para la representación de gráficos */
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function Dashboard({ user }) {
@@ -70,7 +70,7 @@ function Dashboard({ user }) {
         <p className="text-gray-600">Aquí tienes el resumen de lo que pasa en tu condominio.</p>
       </div>
 
-      {/* TARJETAS SUPERIORES */}
+      {/* TARJETAS CON ESTADÍSTICAS PRINCIPALES DEL CONDOMINIO */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-start">
@@ -132,7 +132,7 @@ function Dashboard({ user }) {
           </div>
         </div>
 
-        {/* ACCESOS RÁPIDOS */}
+        {/* ACCESOS RÁPIDOS A FUNCIONALIDADES FRECUENTES */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Accesos Rápidos</h3>
           <div className="space-y-3">

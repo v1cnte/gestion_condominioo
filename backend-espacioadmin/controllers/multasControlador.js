@@ -1,6 +1,6 @@
 import Multa from '../models/multaModel.js';
 
-// Obtener multas — trae todas las multas registradas.
+/* Obtiene y retorna la lista completa de todas las multas registradas en el sistema */
 export const getMultas = async (req, res) => {
   try {
     const multas = await Multa.find();
@@ -10,7 +10,7 @@ export const getMultas = async (req, res) => {
   }
 };
 
-// Crear multa — guarda una nueva multa con unidad, motivo y monto.
+/* Registra una nueva multa con los datos del residente, motivo, monto y estado */
 export const createMulta = async (req, res) => {
   try {
     const { unidad, residente, motivo, monto, estado, fecha } = req.body;
@@ -29,7 +29,7 @@ export const createMulta = async (req, res) => {
   }
 };
 
-// Obtener multa — devuelve una multa por su id (404 si no existe).
+/* Obtiene una multa específica por su identificador único */
 export const getMulta = async (req, res) => {
   try {
     const multa = await Multa.findById(req.params.id);
@@ -40,7 +40,7 @@ export const getMulta = async (req, res) => {
   }
 };
 
-// Actualizar multa — aplica cambios y devuelve el registro actualizado.
+/* Actualiza los datos de una multa existente y retorna el registro modificado */
 export const updateMulta = async (req, res) => {
   try {
     const multa = await Multa.findByIdAndUpdate(req.params.id, req.body, {
@@ -53,7 +53,7 @@ export const updateMulta = async (req, res) => {
   }
 };
 
-// Eliminar multa — borra por id y devuelve el objeto eliminado.
+/* Elimina una multa por su identificador y retorna el registro eliminado */
 export const deleteMulta = async (req, res) => {
   try {
     const multa = await Multa.findByIdAndDelete(req.params.id);

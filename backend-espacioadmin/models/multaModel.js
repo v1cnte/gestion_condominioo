@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// Modelo Multa — unidad, residente, motivo, monto, estado y fecha
+/* Esquema de datos para gestionar el registro de multas y sanciones de los residentes */
 const multaSchema = new mongoose.Schema({
     unidad: {
     type: String,
@@ -21,7 +21,7 @@ const multaSchema = new mongoose.Schema({
     estado: {
     type: String,
     required: true,
-    enum: ['Pendiente', 'Pagada'], // Estados usados en el front
+    enum: ['Pendiente', 'Pagada'], /* Define los estados posibles de una multa en la aplicación */
     default: 'Pendiente'
     },
     fecha: {

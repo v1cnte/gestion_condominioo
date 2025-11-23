@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'; // <-- 1. IMPORTA useEffect
+import { useState, useEffect } from 'react'; /* Se importa para manejo de estado local y ciclo de vida */
 import { useNotificaciones } from '../context/NotificacionesContext';
-import { useMultas } from '../context/MultasContext'; // <-- 2. IMPORTA EL HOOK (contexto)
+import { useMultas } from '../context/MultasContext'; /* Se importa el hook personalizado para acceder al contexto de multas */
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPlus, 
@@ -12,12 +12,12 @@ import {
 function Multas() {
   const { notificarNuevaMulta } = useNotificaciones();
   
-  // --- 3. TRAEMOS TODO DESDE EL HOOK (contexto) ---
+  /* Se obtienen todas las funciones de gestión de multas desde el contexto */
   const { multas, getMultas, createMulta, deleteMulta } = useMultas();
   
   const [showAddForm, setShowAddForm] = useState(false);
   
-  // --- BORRAMOS EL 'useState' CON DATOS FALSOS ---
+  /* Se eliminó el estado con datos simulados, ahora se obtienen del servidor */
 
   const [nuevaMulta, setNuevaMulta] = useState({
     unidad: '',
@@ -30,10 +30,10 @@ function Multas() {
 
   const [filtro, setFiltro] = useState('');
 
-  // --- 4. LE DECIMOS QUE CARGUE LAS MULTAS DE LA BD AL ABRIR ---
+  /* Al cargar el componente se obtienen todas las multas del servidor */
   useEffect(() => {
-    getMultas(); // getMultas 
-  }, []); // El [] significa "solo hazlo la primera vez"
+    getMultas(); /* Se ejecuta la función para cargar multas */
+  }, []); /* Array vacío indica que se ejecuta solo una vez al montar */
 
   const motivosComunes = [
     'Ruido excesivo',
@@ -45,7 +45,8 @@ function Multas() {
   ];
 
   
-  const handleSubmit = async (e) => { // Lo hacemos 'async'
+  /* Función asincrónica que maneja el envío del formulario de nueva multa */
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (nuevaMulta.unidad && nuevaMulta.residente && nuevaMulta.motivo && nuevaMulta.monto) {
       
@@ -54,10 +55,10 @@ function Multas() {
         monto: parseFloat(nuevaMulta.monto)
       };
 
-      //
+      /* Se crea la multa en el servidor a través del contexto */
       await createMulta(multaParaGuardar); 
       
-      // 'MultasContext' se encargará de actualizar la lista)
+      /* El contexto de multas se encarga de actualizar la lista automáticamente */
       
       notificarNuevaMulta(nuevaMulta.unidad, nuevaMulta.motivo);
       
@@ -73,15 +74,15 @@ function Multas() {
     }
   };
 
-  // --- 6. ACTUALIZAMOS EL 'eliminarMulta' ---
-  const eliminarMulta = async (id) => { // Lo hacemos 'async'
+  /* Función asincrónica que elimina una multa del servidor */
+  const eliminarMulta = async (id) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta multa?')) {
-  // ¡Aquí "llamamos" al hook (contexto) para que borre de la BD!
-  await deleteMulta(id);
+      /* Se llama al contexto para eliminar la multa de la base de datos */
+      await deleteMulta(id);
     }
   };
 
-  // --- De aquí para abajo, todo el código de filtrado y JSX es IGUAL ---
+  /* Código de filtrado y cálculo de estadísticas de multas */
   
 
   const multasFiltradas = multas.filter(multa => {

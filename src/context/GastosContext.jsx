@@ -3,7 +3,7 @@ import {
     createGastoRequest,
     getGastosRequest,
     deleteGastoRequest,
-    updateGastoRequest // <--- Importamos esto (asegúrate de que exista en api/gastos.js)
+    updateGastoRequest /* Se importa la función para actualizar gastos desde el módulo de gastos */
 } from '../api/gastos.js';
 
 export const GastosContext = createContext();
@@ -44,7 +44,7 @@ export const GastosProvider = ({ children }) => {
         }
     };
 
-    // --- NUEVA FUNCIÓN: Actualizar Gasto ---
+    /* Función asincrónica que actualiza un gasto existente en el servidor y en el estado */
     const updateGasto = async (id, gastoActualizado) => {
         try {
             const res = await updateGastoRequest(id, gastoActualizado);
@@ -62,7 +62,7 @@ export const GastosProvider = ({ children }) => {
             getGastos, 
             createGasto, 
             deleteGasto, 
-            updateGasto // <--- Exportamos la función
+            updateGasto /* Se exporta la función de actualización para su uso en componentes */
         }}>
             {children}
         </GastosContext.Provider>

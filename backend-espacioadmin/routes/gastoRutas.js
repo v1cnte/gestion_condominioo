@@ -13,7 +13,7 @@ const router = Router();
 router.get('/gastos', authRequired, getGastos);
 router.get('/gastos/:id', authRequired, getGasto);
 
-// Solo Admin y Super Admin pueden tocar el dinero
+/* Solo administradores y super administradores pueden crear, modificar y eliminar gastos comunes */
 router.post('/gastos', authRequired, tieneRol(['admin', 'super_admin']), createGasto);
 router.put('/gastos/:id', authRequired, tieneRol(['admin', 'super_admin']), updateGasto);
 router.delete('/gastos/:id', authRequired, tieneRol(['admin', 'super_admin']), deleteGasto);

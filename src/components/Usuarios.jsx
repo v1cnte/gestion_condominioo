@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useUsuarios } from '../context/UsuariosContext';
-import { useAuth } from '../context/AuthContext'; // <--- 1. IMPORTANTE: Para saber quién eres
+import { useAuth } from '../context/AuthContext'; /* Se importa para obtener información de la sesión del usuario actual */
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faEdit, 
@@ -15,7 +15,7 @@ import {
 
 function Usuarios() {
   const { usuarios, getUsuarios, deleteUsuario, updateUsuario, createUsuario } = useUsuarios();
-  const { user } = useAuth(); // <--- 2. Obtenemos tus datos de sesión
+  const { user } = useAuth(); /* Se obtienen los datos de sesión del usuario actual */
   
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -31,8 +31,8 @@ function Usuarios() {
 
   const [filtro, setFiltro] = useState('');
 
-  // 3. DEFINIMOS QUIÉN ES JEFE
-  // Solo 'admin' y 'super_admin' verán los botones.
+  /* Se valida si el usuario actual tiene permisos de administrador para ver opciones de gestión */
+  /* Solo usuarios con rol 'admin' o 'super_admin' pueden ver botones de edición y eliminación */
   const esAdmin = ['admin', 'super_admin'].includes(user?.rol);
 
   useEffect(() => {

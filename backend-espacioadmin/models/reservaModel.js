@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// Modelo Reserva — unidad, residente, espacio, fecha, horario y estado
+/* Esquema de datos para gestionar las reservas de espacios comunes del condominio */
 const reservaSchema = new mongoose.Schema({
   unidad: {
     type: String,
@@ -19,11 +19,11 @@ const reservaSchema = new mongoose.Schema({
     required: true,
   },
   horaInicio: {
-    type: String, // Guardamos horario como string: "18:00"
+    type: String, /* La hora se almacena en formato texto (HH:MM) para mayor flexibilidad */
     required: true,
   },
   horaFin: {
-    type: String, // Guardamos horario como string: "22:00"
+    type: String, /* La hora se almacena en formato texto (HH:MM) para mayor flexibilidad */
     required: true,
   },
   estado: {

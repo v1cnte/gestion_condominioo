@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 import Usuario from '../models/usuarioModel.js';
 
-const TOKEN_SECRET = 'mi_llave_secreta_123'; // Misma clave que en authControlador.js
+const TOKEN_SECRET = 'mi_llave_secreta_123'; /* Clave secreta para la firma de tokens JWT - debe coincidir con la del controlador de autenticación */
 
-// 1. Verifica que el usuario esté logueado (tenga token válido)
+/* Middleware de autenticación que verifica la validez del token JWT del usuario */
 export const authRequired = async (req, res, next) => {
   try {
     const token = req.headers.authorization;
@@ -16,7 +16,7 @@ export const authRequired = async (req, res, next) => {
       const usuario = await Usuario.findById(userDecoded.id);
       if (!usuario) return res.status(404).json({ message: "Usuario no encontrado" });
 
-      req.user = usuario; // Guardamos el usuario para usarlo después
+      req.user = usuario; /* Se almacena la información del usuario en el objeto de solicitud para su uso posterior */
       next();
     });
   } catch (error) {
@@ -24,7 +24,7 @@ export const authRequired = async (req, res, next) => {
   }
 };
 
-// 2. Verifica que el usuario tenga el ROL correcto
+/* Middleware de autorización que verifica si el usuario posee los roles requeridos para acceder al recurso */
 export const tieneRol = (rolesPermitidos) => {
   return (req, res, next) => {
     if (!req.user) return res.status(500).json({ message: "Error de servidor" });

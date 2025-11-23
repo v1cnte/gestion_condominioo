@@ -39,14 +39,14 @@ function Pagos() {
       return;
     }
 
-    // Para subir archivos, usamos FormData en lugar de JSON
+    /* Para subir archivos se utiliza FormData en lugar de JSON */
     const formData = new FormData();
     formData.append('unidad', nuevoPago.unidad);
     formData.append('residente', nuevoPago.residente);
     formData.append('monto', nuevoPago.monto);
     formData.append('metodo', nuevoPago.metodo);
     formData.append('fechaPago', nuevoPago.fechaPago);
-    formData.append('comprobante', archivo); // El nombre 'comprobante' debe coincidir con el backend
+    formData.append('comprobante', archivo); /* El nombre 'comprobante' debe coincidir con la configuración del servidor */
 
     try {
       await axios.post('/pagos', formData, {
@@ -55,7 +55,7 @@ function Pagos() {
       setMensaje('Pago registrado correctamente');
       setNuevoPago({ ...nuevoPago, monto: '' });
       setArchivo(null);
-      // Limpiar input file visualmente es un poco más complejo en React sin useRef, pero esto resetea el estado
+      /* La limpieza del input file es más compleja en React sin useRef, por lo que se resetea el estado */
       cargarPagos();
       setTimeout(() => setMensaje(''), 3000);
     } catch (error) {

@@ -8,13 +8,13 @@ import {
   faSearch, 
   faCalendarCheck,
   faMapMarkerAlt,
-  faCheck // <--- Importamos el icono de check
+  faCheck /* Se importa el icono de confirmación para reservas */
 } from '@fortawesome/free-solid-svg-icons';
 
 function Reservas() {
   const { notificarNuevaReserva, notificarCambioEstado } = useNotificaciones();
   
-  // Traemos updateReserva del contexto
+  /* Se obtienen las funciones de gestión de reservas desde el contexto */
   const { reservas, getReservas, createReserva, deleteReserva, updateReserva } = useReservas();
 
   const [showAddForm, setShowAddForm] = useState(false);
@@ -64,13 +64,13 @@ function Reservas() {
     }
   };
 
-  // --- NUEVA FUNCIÓN: Confirmar Reserva ---
+  /* Función asincrónica que permite confirmar una reserva pendiente */
   const confirmarReserva = async (reserva) => {
     if (window.confirm(`¿Desea confirmar la reserva de ${reserva.espacio} para la unidad ${reserva.unidad}?`)) {
-      // Enviamos el objeto con el estado cambiado a "Confirmada"
+      /* Se actualiza el estado de la reserva a confirmada en el servidor */
       await updateReserva(reserva._id, { ...reserva, estado: 'Confirmada' });
       
-      // Opcional: Notificación visual
+      /* Se muestra notificación visual de confirmación */
       if (notificarCambioEstado) {
         notificarCambioEstado('info', `Reserva confirmada para la unidad ${reserva.unidad}`);
       }

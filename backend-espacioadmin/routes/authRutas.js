@@ -1,5 +1,5 @@
 import { Router } from 'express'
-// Importamos controladores de auth
+/* Importa los controladores de autenticación y gestión de usuarios */
 import { 
     registro, 
     login, 
@@ -10,11 +10,11 @@ import {
 
 const router = Router()
 
-// Rutas de autenticación
+/* Rutas de autenticación para registro e inicio de sesión */
 router.post('/registro', registro)
 router.post('/login', login)
 
-// Rutas para administrar usuarios (lista, actualizar, eliminar)
+/* Rutas para la gestión administrativa de usuarios: listar, actualizar y eliminar */
 router.get('/usuarios', getUsuarios);
 router.delete('/usuarios/:id', deleteUsuario);
 router.put('/usuarios/:id', updateUsuario);

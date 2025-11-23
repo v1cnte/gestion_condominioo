@@ -1,7 +1,7 @@
-import axios from './axios.js' // Importa el "teléfono"
+import axios from './axios.js' /* Instancia de axios preconfigurada */
 
-// "Llamada" para OBTENER todas las consultas (para el Admin)
+/* Obtiene todas las consultas desde el servidor para consulta administrativa */
 export const getConsultasRequest = () => axios.get('/consultas')
 
-// "Llamada" para CREAR una consulta (para el Usuario)
+/* Envía una consulta al servidor para que sea procesada */
 export const createConsultaRequest = (consulta) => axios.post('/consultas', consulta)

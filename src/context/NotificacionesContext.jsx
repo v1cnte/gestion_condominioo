@@ -10,8 +10,8 @@ import {
   faEdit
 } from '@fortawesome/free-solid-svg-icons';
 
-// Contexto de notificaciones: guarda la lista y provee helpers.
-// Comentarios breves: usar `useNotificaciones()` dentro de un Provider.
+/* Contexto global de notificaciones que gestiona la lista y proporciona funciones auxiliares */
+/* Utilizar useNotificaciones() dentro de un componente envuelto por NotificacionesProvider */
 const NotificacionesContext = createContext();
 
 export const useNotificaciones = () => {
@@ -21,7 +21,7 @@ export const useNotificaciones = () => {
 };
 
 export const NotificacionesProvider = ({ children }) => {
-  // estado inicial con ejemplos; reemplaza por datos reales si tienes backend
+  /* Estado inicial con ejemplos de notificaciones - reemplazar con datos reales del backend si está disponible */
   const [notificaciones, setNotificaciones] = useState([
     {
       id: 1,
@@ -61,7 +61,7 @@ export const NotificacionesProvider = ({ children }) => {
     }
   ]);
 
-  // agrega una notificación con fecha/hora actuales y devuelve su id
+  /* Función que agrega una nueva notificación con fecha y hora actual al inicio de la lista */
   const agregarNotificacion = (notificacion) => {
     const nuevaNotificacion = {
       id: Date.now(),
@@ -76,20 +76,20 @@ export const NotificacionesProvider = ({ children }) => {
     return nuevaNotificacion.id;
   };
 
-  // marcar una notificación como leída
+  /* Marca una notificación específica como leída actualizando su estado */
   const marcarComoLeida = (id) => {
     setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n));
   };
 
-  // marcar todas como leídas
+  /* Marca todas las notificaciones como leídas de una sola vez */
   const marcarTodasComoLeidas = () => setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })));
 
-  // eliminar notificación por id
+  /* Elimina una notificación específica de la lista por su identificador */
   const eliminarNotificacion = (id) => setNotificaciones(prev => prev.filter(n => n.id !== id));
 
   const notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
 
-  // helpers: crean notificaciones típicas y usan agregarNotificacion
+  /* Funciones auxiliares que crean notificaciones de tipos específicos utilizando agregarNotificacion */
   const notificarNuevoGasto = (descripcion, monto) => agregarNotificacion({
     tipo: 'pago',
     titulo: 'Nuevo Gasto Común Registrado',

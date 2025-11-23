@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [errors, setErrors] = useState([]);
 
-  // Al cargar la app, revisamos si hay una sesión guardada en localStorage
+  /* Al cargar la aplicación se verifica si existe una sesión guardada en el almacenamiento local del navegador */
   useEffect(() => {
     const storedUser = localStorage.getItem('user_data');
     const storedToken = localStorage.getItem('token');
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
         setIsLoggedIn(true);
       } catch (e) {
         console.error("Error recuperando sesión", e);
-        // Si falla, limpiamos
+        /* Si falla la recuperación de sesión se limpian los datos del almacenamiento local */
         localStorage.removeItem('token');
         localStorage.removeItem('user_data');
       }
@@ -37,11 +37,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await loginRequest(userData);
       
-      // 1. Guardamos el usuario en el Estado Global
+      /* Se actualiza el estado global con los datos del usuario autenticado */
       setUser(res.data); 
       setIsLoggedIn(true);
       
-      // 2. Guardamos datos en LocalStorage para que no se pierdan al recargar
+      /* Se persisten los datos de autenticación en el almacenamiento local para mantener la sesión activa */
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user_data', JSON.stringify(res.data));
       

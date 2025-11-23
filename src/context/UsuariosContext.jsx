@@ -3,7 +3,7 @@ import {
     getUsuariosRequest,
     deleteUsuarioRequest,
     updateUsuarioRequest,
-    registroRequest // <--- Importamos el registro (usaremos el mismo endpoint)
+    registroRequest /* Se importa la función de registro para crear usuarios desde el admin */
 } from '../api/auth.js';
 
 export const UsuariosContext = createContext();
@@ -44,14 +44,14 @@ export const UsuariosProvider = ({ children }) => {
         }
     };
 
-    // --- NUEVA FUNCIÓN: Crear Usuario desde el Admin ---
+    /* Función que permite crear un nuevo usuario desde el panel de administración */
     const createUsuario = async (usuario) => {
         try {
-            // Usamos el mismo endpoint de registro
+            /* Se utiliza el endpoint de registro para crear el usuario */
             const res = await registroRequest(usuario);
-            // Si tiene éxito, lo agregamos a la lista local (res.data devuelve el usuario creado)
-            // Nota: El endpoint de registro devuelve { id, nombre, email, token... }
-            // Adaptamos el objeto para que coincida con la lista
+            /* Se agrega el nuevo usuario a la lista local si la operación es exitosa */
+            /* El servidor retorna el objeto con id, nombre, email y otros campos */
+            /* Se estructura el objeto para que coincida con el modelo de datos local */
             const nuevoUsuario = { ...usuario, _id: res.data.id, createdAt: new Date() }; 
             setUsuarios(prev => [...prev, nuevoUsuario]);
             return { success: true };

@@ -7,24 +7,24 @@ import { authRequired } from '../middlewares/authMiddleware.js';
 
 const router = Router();
 
-// --- Configuración de Multer (Subida de archivos) ---
+/* Configuración de Multer para la gestión de subida de archivos de comprobantes */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // CORREGIDO: Solo subimos un nivel (../) para llegar a la raíz del backend
+    /* Se sube un nivel desde el directorio de rutas para acceder al directorio uploads del backend */
     cb(null, path.join(__dirname, '../uploads')); 
   },
   filename: function (req, file, cb) {
-    // Nombre único: tiempo-nombreoriginal
+    /* Se genera un nombre de archivo único combinando la marca de tiempo actual con el nombre original */
     cb(null, Date.now() + '-' + file.originalname);
   }
 });
 
 const upload = multer({ storage: storage });
 
-// --- Rutas ---
+/* Definición de rutas para la gestión de pagos */
 router.post('/pagos', authRequired, upload.single('comprobante'), createPago);
 router.get('/pagos', authRequired, getPagos);
 router.put('/pagos/:id/estado', authRequired, updateEstadoPago);

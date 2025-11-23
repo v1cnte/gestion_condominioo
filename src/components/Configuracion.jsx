@@ -9,22 +9,22 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 function Configuracion() {
-  // Configuración local simulada: estado y guardado mock
+  /* Estado local para almacenar la configuración del condominio y proporcionar simulación de guardado */
   const [config, setConfig] = useState({
     nombreCondominio: 'Condominio Vista Hermosa',
     administrador: 'Carlos Mendes',
     telefono: '+55 11 3333-4444',
     email: 'admin@vistahermosa.com.br',
     
-    // horarios simples
+    /* Horarios de funcionamiento de áreas comunes */
     horarioPorteria: '06:00 - 22:00',
     horarioAreas: '08:00 - 20:00',
     
-    // notificaciones básicas
+    /* Configuración de notificaciones */
     emailActivo: true,
     recordatoriosActivos: true,
     
-    // configuración de pagos
+    /* Parámetros de configuración de pagos y mora */
     diaVencimiento: 10,
     interesMora: 2.5
   });
@@ -32,7 +32,7 @@ function Configuracion() {
   const [mensaje, setMensaje] = useState('');
   const [guardando, setGuardando] = useState(false);
 
-  // cambiarValor: actualiza una clave del objeto config
+  /* Función que actualiza un campo específico en el objeto de configuración */
   const cambiarValor = (campo, valor) => {
     setConfig(prev => ({
       ...prev,
@@ -40,10 +40,10 @@ function Configuracion() {
     }));
   };
 
-  // guardarConfig: simulación de guardado (setTimeout)
+  /* Función asincrónica que simula el guardado de la configuración en el servidor */
   const guardarConfig = async () => {
     setGuardando(true);
-    // simulo que se guarda
+    /* Se simula el tiempo de procesamiento del servidor */
     setTimeout(() => {
       setMensaje('Configuración guardada correctamente!');
       setGuardando(false);
@@ -53,12 +53,12 @@ function Configuracion() {
 
   return (
     <div className="p-6">
-      {/* título */}
+      {/* ENCABEZADO Y TÍTULO DE LA PÁGINA */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Configuración</h1>
         <p className="text-gray-600">Configuraciones básicas del sistema</p>
         
-        {/* botón guardar */}
+        {/* BOTÓN PARA GUARDAR CAMBIOS EN LA CONFIGURACIÓN */}
         <button
           onClick={guardarConfig}
           disabled={guardando}
@@ -68,7 +68,7 @@ function Configuracion() {
           {guardando ? 'Guardando...' : 'Guardar'}
         </button>
 
-        {/* mensaje */}
+        {/* MENSAJE DE CONFIRMACIÓN VISUAL */}
         {mensaje && (
           <div className="mt-3 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
             <FontAwesomeIcon icon={faCheck} className="mr-2" />
@@ -77,7 +77,7 @@ function Configuracion() {
         )}
       </div>
 
-      {/* información básica del condominio */}
+      {/* SECCIÓN DE INFORMACIÓN BÁSICA DEL CONDOMINIO */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <FontAwesomeIcon icon={faBuilding} className="text-blue-600" />
@@ -127,7 +127,7 @@ function Configuracion() {
         </div>
       </div>
 
-      {/* horarios */}
+      {/* SECCIÓN DE HORARIOS DE ÁREAS COMUNES */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <FontAwesomeIcon icon={faClock} className="text-green-600" />
@@ -159,7 +159,7 @@ function Configuracion() {
         </div>
       </div>
 
-      {/* notificaciones simples */}
+      {/* SECCIÓN DE CONFIGURACIÓN DE NOTIFICACIONES */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <FontAwesomeIcon icon={faBell} className="text-purple-600" />
@@ -189,8 +189,8 @@ function Configuracion() {
         </div>
       </div>
 
-      {/* configuración de pagos básica */}
-      <div className="bg-white rounded-lg shadow p-6">
+      {/* SECCIÓN DE CONFIGURACIÓN DE PAGOS */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Configuración de Pagos</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

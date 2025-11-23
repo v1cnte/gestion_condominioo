@@ -13,12 +13,12 @@ export const useConsultas = () => {
 
 export const ConsultaProvider = ({ children }) => {
     
-    // Esta función "llama" al cocinero para CREAR una consulta
+    /* Función asincrónica que envía una consulta al servidor */
     const createConsulta = async (consulta) => {
         try {
             const res = await createConsultaRequest(consulta);
             console.log("Consulta enviada:", res.data);
-            return res.data; // Devuelve éxito
+            return res.data; /* Retorna los datos de la consulta creada */
         } catch (error) {
             console.error(error);
         }
@@ -27,7 +27,7 @@ export const ConsultaProvider = ({ children }) => {
     return (
         <ConsultaContext.Provider value={{
             createConsulta
-            // (Aquí puedes añadir getConsultas para el Admin)
+            /* Funciones adicionales getConsultas pueden implementarse en futuro para administradores */
         }}>
             {children}
         </ConsultaContext.Provider>

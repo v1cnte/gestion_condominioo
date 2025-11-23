@@ -5,7 +5,7 @@ const instance = axios.create({
   withCredentials: true 
 });
 
-// ESTA PARTE ES CRUCIAL: Envía el token en cada petición
+/* Este interceptor es fundamental: agrega el token de autenticaci\u00f3n en cada petici\u00f3n HTTP */
 instance.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {

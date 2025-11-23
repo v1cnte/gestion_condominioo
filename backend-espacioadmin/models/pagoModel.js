@@ -23,7 +23,7 @@ const pagoSchema = new mongoose.Schema({
     default: 'Transferencia'
   },
   comprobanteUrl: {
-    type: String, // Aquí guardaremos la ruta de la imagen/pdf
+    type: String, /* Almacena la ruta del archivo de comprobante de pago (imagen o documento PDF) */
     required: true
   },
   estado: {

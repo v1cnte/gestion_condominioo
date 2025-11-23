@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// Modelo FAQ — pregunta y respuesta
+/* Esquema de datos para gestionar las preguntas frecuentes y sus respuestas */
 const faqSchema = new mongoose.Schema({
   question: {
     type: String,

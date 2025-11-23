@@ -20,7 +20,7 @@ import {
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 
-// Registrar componentes de gráficos
+/* Se registran los componentes necesarios de Chart.js para la visualización de gráficos */
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function Reportes() {
@@ -51,19 +51,19 @@ function Reportes() {
     cargarDatos();
   }, []);
 
-  // Función para imprimir reporte
+  /* Función que abre el diálogo de impresión del navegador */
   const handlePrint = () => {
     window.print();
   };
 
-  // Configuración del Gráfico
+  /* Configuración de los datos y estilos del gráfico de barras */
   const dataGrafico = {
     labels: resumen.gastosPorTipo?.map(item => item._id) || [],
     datasets: [
       {
         label: 'Monto Gastado ($)',
         data: resumen.gastosPorTipo?.map(item => item.total) || [],
-        backgroundColor: 'rgba(59, 130, 246, 0.6)', // Azul bonito
+        backgroundColor: 'rgba(59, 130, 246, 0.6)', /* Color azul para barras */
         borderColor: 'rgba(59, 130, 246, 1)',
         borderWidth: 1,
       },
@@ -82,7 +82,7 @@ function Reportes() {
 
   return (
     <div className="p-6">
-      {/* Header con botón de imprimir */}
+      {/* ENCABEZADO CON BOTÓN DE IMPRESIÓN */}
       <div className="mb-6 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Reportes Financieros</h1>

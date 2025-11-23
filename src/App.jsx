@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 
-// Contextos
+/* Importación de proveedores de contexto para manejo de estado global */
 import { AuthProvider, useAuth } from './context/AuthContext' 
 import { NotificacionesProvider } from './context/NotificacionesContext'
 import { MultasProvider } from './context/MultasContext'
@@ -10,7 +10,7 @@ import { UsuariosProvider } from './context/UsuariosContext'
 import { FaqProvider } from './context/FaqContext'
 import { ConsultaProvider } from './context/ConsultaContext'
 
-// Componentes
+/* Importación de componentes principales de la aplicación */
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 import Layout from './components/Layout'
@@ -38,14 +38,14 @@ function AppRoutes() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard user={user} />} />
         
-        {/* Rutas principales */}
+        {/* RUTAS PRINCIPALES DE GESTIÓN DEL CONDOMINIO */}
         <Route path="/condominios" element={<Condominios />} />
         <Route path="/gastos-comunes" element={<GastosComunes />} />
         <Route path="/pagos" element={<Pagos />} />
         <Route path="/multas" element={<Multas />} />
         <Route path="/reservas" element={<Reservas />} />
         
-        {/* Rutas de gestión */}
+        {/* RUTAS DE REPORTES Y ADMINISTRACIÓN */}
         <Route path="/reportes" element={<Reportes />} />
         <Route path="/usuarios" element={<Usuarios />} />
         <Route path="/configuracion" element={<Configuracion />} />

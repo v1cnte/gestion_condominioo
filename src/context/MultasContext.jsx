@@ -10,7 +10,7 @@ import {
 
 export const MultasContext = createContext();
 
-// Hook para usar el cerebro
+/* Hook personalizado que proporciona acceso al contexto de multas en cualquier componente */
 export const useMultas = () => {
     const context = useContext(MultasContext);
     if (!context) {
@@ -19,37 +19,37 @@ export const useMultas = () => {
     return context;
 };
 
-// El Cerebro
+/* Proveedor de contexto que gestiona el estado global de multas y proporciona funciones para manipular estos datos */
 export const MultasProvider = ({ children }) => {
-    const [multas, setMultas] = useState([]); // ¡Aquí vivirá la lista de multas!
+    const [multas, setMultas] = useState([]); /* Estado que almacena la lista de multas obtenidas de la base de datos */
 
-    // Función para "llamar" y PEDIR TODAS las multas
+    /* Función asincrónica que obtiene todas las multas desde el servidor y actualiza el estado */
     const getMultas = async () => {
         try {
             const res = await getMultasRequest();
-            setMultas(res.data); // Guarda las multas de la BD en el estado
+            setMultas(res.data); /* Actualiza el estado con las multas obtenidas de la base de datos */
         } catch (error) {
             console.error(error);
         }
     };
 
-    // Función para "llamar" y CREAR una multa
+    /* Función asincrónica que crea una nueva multa y la agrega al estado local */
     const createMulta = async (multa) => {
         try {
             const res = await createMultaRequest(multa);
-            // Agregamos la nueva multa (que nos devuelve la BD) a la lista
+            /* Agrega la nueva multa retornada por el servidor a la lista local de multas */
             setMultas([...multas, res.data]);
         } catch (error) {
             console.error(error);
         }
     };
 
-    // Función para "llamar" y BORRAR una multa
+    /* Función asincrónica que elimina una multa del servidor y actualiza el estado */
     const deleteMulta = async (id) => {
         try {
             const res = await deleteMultaRequest(id);
             if (res.status === 200) {
-                // Filtramos la multa eliminada del estado
+                /* Filtra la multa eliminada del estado local */
                 setMultas(multas.filter(multa => multa._id !== id));
             }
         } catch (error) {
@@ -63,7 +63,7 @@ export const MultasProvider = ({ children }) => {
             getMultas,
             createMulta,
             deleteMulta
-            // Aquí puedes agregar getMulta y updateMulta si los necesitas
+            /* Funciones adicionales getMulta y updateMulta pueden agregarse aquí si se requieren en futuro */
         }}>
             {children}
         </MultasContext.Provider>
