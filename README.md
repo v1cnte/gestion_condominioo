@@ -1,74 +1,141 @@
-inyección gastos comunes
+ EspacioAdmin - Sistema de Gestión de Condominios
+EspacioAdmin es una plataforma integral basada en el stack MERN (MongoDB, Express, React, Node.js) diseñada para modernizar la administración de edificios y condominios. El sistema centraliza la gestión financiera, el control de acceso y la operatividad diaria en una interfaz moderna y responsiva.
 
-http://localhost:4000/api/gastos
+ Características Principales
+ Seguridad y Acceso
+Autenticación Robusta: Login seguro con JSON Web Tokens (JWT).
 
- {
-  "concepto": "Reparación Ascensor Torre B",
-  "monto": 350000,
-  "tipo": "Mantenimiento",
-  "estado": "Pendiente",
-  "fecha": "2025-11-15"
-}
+Control de Roles (RBAC): Sistema de permisos granulares.
 
+Super Admin / Admin: Acceso total (Gestión financiera, usuarios, configuración).
 
-inyección faqs
+Conserje: Gestión operativa (Reservas, revisión de pagos).
 
-http://localhost:4000/api/faqs
-{
-  "question": "¿Cómo pago mis gastos comunes?",
-  "answer": "En la sección 'Gastos Comunes' de la app."
-}
+Residente: Acceso limitado (Subir comprobantes, reservar espacios).
 
+Protección de Rutas: Middlewares en el backend que impiden accesos no autorizados a nivel de API.
 
-inyección consultas
+ Gestión Financiera (Caso 4)
+Gastos Comunes: Registro detallado de cobros por unidad.
 
-http://localhost:4000/api/consultas 
+Pagos con Respaldo: Los residentes pueden subir comprobantes (imágenes/PDF) de sus transferencias.
 
-{
-  "email": "residente@condominio.com",
-  "note": "La luz del pasillo 3 está quemada."
-}
+Validación de Pagos: El administrador puede visualizar el comprobante y aprobar o rechazar el pago.
 
-inyección reservas 
+Control de Morosidad: Algoritmo automático que detecta unidades con deudas pendientes y calcula el total adeudado.
 
+ Dashboard y Reportes
+KPIs en Tiempo Real: Tarjetas informativas con recaudación mensual, deuda total y ocupación.
 
-http://localhost:4000/api/reservas
+Gráficos Interactivos: Visualización de la distribución de gastos (Chart.js).
 
-{
-  "unidad": "B-202",
-  "residente": "Residente de Prueba",
-  "espacio": "Salón de Eventos",
-  "fecha": "2025-12-31",
-  "horaInicio": "20:00",
-  "horaFin": "02:00",
-  "estado": "Pendiente"
-}
+Reportes Imprimibles: Vista optimizada para impresión (CSS print) que genera informes limpios y profesionales.
 
-inyección multas
+ Operaciones
+Gestión de Usuarios: CRUD completo de residentes y staff.
 
-http://localhost:4000/api/reservas
+Reservas: Sistema para agendar espacios comunes (Quincho, Salón) con validación de estado.
 
-{
-  "unidad": "C-301",
-  "residente": "Bruno luchini",
-  "motivo": "Ruidos molestos fuera de horario permitido",
-  "monto": 50000,
-  "estado": "Pendiente",
-  "fecha": "2025-11-10"
-}
+Multas: Registro y seguimiento de infracciones.
 
-inyección usuarios
+ Tecnologías Utilizadas
+Frontend
+React 19 + Vite
 
-http://localhost:4000/api/registro
+Tailwind CSS (Estilos y Diseño Responsivo)
 
-{
-  "nombre": "Nuevo Residente Ejemplo",
-  "email": "residente.nuevo@condominio.com",
-  "password": "password123",
-  "rol": "residente",
-  "unidad": "E-505"
-}
+Axios (Comunicación HTTP e Interceptores de Token)
 
- 
+React Chartjs 2 (Gráficos de datos)
 
+FontAwesome (Iconografía)
 
+Backend
+Node.js + Express
+
+MongoDB + Mongoose (Base de datos NoSQL)
+
+Multer (Manejo de subida de archivos/imágenes)
+
+Bcryptjs (Encriptación de contraseñas)
+
+JWT (Manejo de sesiones)
+
+Morgan & Cors (Utilidades de servidor)
+
+ Instalación y Despliegue
+Este proyecto requiere ejecutar tanto el Backend como el Frontend.
+
+Requisitos Previos
+Node.js (v18 o superior)
+
+MongoDB (Servicio corriendo localmente en mongodb://localhost:27017/GestionCondominio)
+
+1. Configuración del Backend
+Navega a la carpeta del servidor:
+
+Bash
+
+cd backend-espacioadmin
+Instala las dependencias:
+
+Bash
+
+npm install
+Crea la carpeta para archivos subidos (si no existe):
+
+Bash
+
+mkdir uploads
+Inicia el servidor:
+
+Bash
+
+npm run dev
+El servidor correrá en el puerto 4000.
+
+Nota: Al iniciar por primera vez, el sistema ejecutará un script automático (initialSetup.js) que creará un usuario Super Admin por defecto si la base de datos está vacía.
+
+2. Configuración del Frontend
+Abre una nueva terminal y navega a la raíz del proyecto:
+
+Bash
+
+# Si estás en backend, retrocede: cd ..
+Instala las dependencias:
+
+Bash
+
+npm install
+Inicia la aplicación React:
+
+Bash
+
+npm run dev
+La aplicación estará disponible en http://localhost:5173.
+
+ Credenciales de Acceso (Demo)
+Si la base de datos es nueva, el sistema generará automáticamente estas credenciales:
+
+Email: admin@condominio.com
+
+Contraseña: admin123
+
+ Estructura del Proyecto
+gestion_condominioo/
+├── backend-espacioadmin/   # Servidor Node/Express
+│   ├── config/             # Configuraciones (Mailer)
+│   ├── controllers/        # Lógica de negocio
+│   ├── libs/               # Scripts de inicialización (Semilla)
+│   ├── middlewares/        # Seguridad (Auth, Roles)
+│   ├── models/             # Esquemas de Mongoose (BD)
+│   ├── routes/             # Endpoints de la API
+│   ├── uploads/            # Almacenamiento de comprobantes
+│   └── app.js              # Configuración de Express
+│
+├── src/                    # Cliente React
+│   ├── api/                # Conexión con Backend (Axios)
+│   ├── components/         # Componentes de UI (Vistas)
+│   ├── context/            # Estado Global (Context API)
+│   └── ...
+└── ...
