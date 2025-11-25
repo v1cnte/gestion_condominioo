@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNotificaciones } from '../context/NotificacionesContext';
 import { useReservas } from '../context/ReservasContext';
+import { useAuth } from '../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPlus, 
@@ -16,6 +17,7 @@ function Reservas() {
   
   /* Se obtienen las funciones de gestión de reservas desde el contexto */
   const { reservas, getReservas, createReserva, deleteReserva, updateReserva } = useReservas();
+  const { user } = useAuth();
 
   const [showAddForm, setShowAddForm] = useState(false);
   
@@ -66,6 +68,11 @@ function Reservas() {
 
   /* Función asincrónica que permite confirmar una reserva pendiente */
   const confirmarReserva = async (reserva) => {
+    if (!['admin', 'super_admin'].includes(user?.rol)) {
+      alert('No tienes permisos para realizar esta acción');
+      return;
+    }
+
     if (window.confirm(`¿Desea confirmar la reserva de ${reserva.espacio} para la unidad ${reserva.unidad}?`)) {
       /* Se actualiza el estado de la reserva a confirmada en el servidor */
       await updateReserva(reserva._id, { ...reserva, estado: 'Confirmada' });
@@ -78,6 +85,11 @@ function Reservas() {
   };
 
   const eliminarReserva = async (id) => {
+    if (!['admin', 'super_admin'].includes(user?.rol)) {
+      alert('No tienes permisos para realizar esta acción');
+      return;
+    }
+
     if (window.confirm('¿Estás seguro de que quieres eliminar esta reserva?')) {
       await deleteReserva(id);
     }
@@ -233,7 +245,7 @@ function Reservas() {
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
                       {/* Botón de Confirmar (Solo si está pendiente) */}
-                      {reserva.estado === 'Pendiente' && (
+                      {reserva.estado === 'Pendiente' && ['admin', 'super_admin'].includes(user?.rol) && (
                         <button 
                           onClick={() => confirmarReserva(reserva)}
                           className="text-green-600 hover:text-green-800 transition-colors"
@@ -244,13 +256,15 @@ function Reservas() {
                       )}
                       
                       {/* Botón Eliminar */}
-                      <button 
-                        onClick={() => eliminarReserva(reserva._id)}
-                        className="text-red-600 hover:text-red-800 transition-colors"
-                        title="Eliminar"
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
+                      {['admin', 'super_admin'].includes(user?.rol) && (
+                        <button 
+                          onClick={() => eliminarReserva(reserva._id)}
+                          className="text-red-600 hover:text-red-800 transition-colors"
+                          title="Eliminar"
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

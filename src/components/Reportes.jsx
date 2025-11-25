@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faChartPie, 
-  faDollarSign, 
-  faExclamationTriangle, 
-  faCalendarCheck, 
+import {
+  faChartPie,
+  faDollarSign,
+  faExclamationTriangle,
+  faCalendarCheck,
   faUsersSlash,
-  faPrint
+  faPrint,
+  faCheckCircle
 } from '@fortawesome/free-solid-svg-icons';
 import axios from '../api/axios';
 import {
@@ -24,11 +25,11 @@ import { Bar } from 'react-chartjs-2';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function Reportes() {
-  const [resumen, setResumen] = useState({ 
-    gastosMes: 0, 
-    multasMes: 0, 
+  const [resumen, setResumen] = useState({
+    gastosMes: 0,
+    multasMes: 0,
     reservasMes: 0,
-    gastosPorTipo: [] 
+    gastosPorTipo: []
   });
   const [morosos, setMorosos] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -88,7 +89,7 @@ function Reportes() {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Reportes Financieros</h1>
           <p className="text-gray-600">Estado actual del condominio - {new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</p>
         </div>
-        <button 
+        <button
           onClick={handlePrint}
           className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 print:hidden"
         >
@@ -136,7 +137,7 @@ function Reportes() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         {/* Gráfico de Barras (NUEVO) */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 lg:col-span-1">
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -158,7 +159,7 @@ function Reportes() {
             <FontAwesomeIcon icon={faUsersSlash} className="text-red-600" />
             Informe de Morosidad
           </h2>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left text-gray-500">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b">

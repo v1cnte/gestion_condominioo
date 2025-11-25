@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import axios from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload, faHistory, faCheckCircle, faTimesCircle, faFileImage } from '@fortawesome/free-solid-svg-icons';
 
 function Pagos() {
+  const { user } = useAuth();
   const [pagos, setPagos] = useState([]);
   const [nuevoPago, setNuevoPago] = useState({
-    unidad: '',
-    residente: '',
+    unidad: user?.unidad || '',
+    residente: user?.nombre || '',
     monto: '',
     metodo: 'Transferencia',
     fechaPago: new Date().toISOString().split('T')[0]
@@ -64,6 +66,14 @@ function Pagos() {
     }
   };
 
+  /* Filtrar pagos según el rol del usuario */
+  const pagosFiltrados = user?.rol === 'residente'
+    ? pagos.filter(pago => pago.unidad === user.unidad)
+    : pagos;
+
+  /* Determinar si el usuario es residente para deshabilitar el campo de unidad */
+  const isResidente = user?.rol === 'residente';
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -89,17 +99,32 @@ function Pagos() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Unidad</label>
-                <input type="text" value={nuevoPago.unidad} onChange={e => setNuevoPago({...nuevoPago, unidad: e.target.value})} className="w-full px-3 py-2 border rounded focus:ring-blue-500" placeholder="Ej: 304" required />
+                <input
+                  type="text"
+                  value={nuevoPago.unidad}
+                  onChange={e => setNuevoPago({ ...nuevoPago, unidad: e.target.value })}
+                  className={`w-full px-3 py-2 border rounded focus:ring-blue-500 ${isResidente ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  placeholder="Ej: 304"
+                  disabled={isResidente}
+                  required
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Monto</label>
-                <input type="number" value={nuevoPago.monto} onChange={e => setNuevoPago({...nuevoPago, monto: e.target.value})} className="w-full px-3 py-2 border rounded focus:ring-blue-500" placeholder="50000" required />
+                <input type="number" value={nuevoPago.monto} onChange={e => setNuevoPago({ ...nuevoPago, monto: e.target.value })} className="w-full px-3 py-2 border rounded focus:ring-blue-500" placeholder="50000" required />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Residente</label>
-              <input type="text" value={nuevoPago.residente} onChange={e => setNuevoPago({...nuevoPago, residente: e.target.value})} className="w-full px-3 py-2 border rounded focus:ring-blue-500" required />
+              <input
+                type="text"
+                value={nuevoPago.residente}
+                onChange={e => setNuevoPago({ ...nuevoPago, residente: e.target.value })}
+                className={`w-full px-3 py-2 border rounded focus:ring-blue-500 ${isResidente ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                disabled={isResidente}
+                required
+              />
             </div>
 
             <div>
@@ -120,8 +145,8 @@ function Pagos() {
             Historial de Pagos
           </h2>
           <div className="space-y-4 max-h-[500px] overflow-y-auto">
-            {pagos.length === 0 ? <p className="text-gray-500 text-center">No hay pagos registrados.</p> : 
-              pagos.map(pago => (
+            {pagosFiltrados.length === 0 ? <p className="text-gray-500 text-center">No hay pagos registrados.</p> :
+              pagosFiltrados.map(pago => (
                 <div key={pago._id} className="border border-gray-100 rounded-lg p-4 flex justify-between items-center hover:bg-gray-50">
                   <div>
                     <p className="font-bold text-gray-800">Unidad {pago.unidad} - ${pago.monto.toLocaleString()}</p>
@@ -130,9 +155,9 @@ function Pagos() {
                       {pago.estado}
                     </span>
                   </div>
-                  <a 
-                    href={`http://localhost:4000${pago.comprobanteUrl}`} 
-                    target="_blank" 
+                  <a
+                    href={`http://localhost:4000${pago.comprobanteUrl}`}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline text-sm flex items-center gap-1"
                   >

@@ -57,13 +57,25 @@ export const MultasProvider = ({ children }) => {
         }
     };
 
+    /* Función asincrónica que actualiza una multa existente en el servidor y en el estado */
+    const updateMulta = async (id, multaActualizada) => {
+        try {
+            const res = await updateMultaRequest(id, multaActualizada);
+            if (res.status === 200) {
+                setMultas(prev => prev.map(m => (m._id === id ? res.data : m)));
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     return (
         <MultasContext.Provider value={{
             multas,
             getMultas,
             createMulta,
-            deleteMulta
-            /* Funciones adicionales getMulta y updateMulta pueden agregarse aquí si se requieren en futuro */
+            deleteMulta,
+            updateMulta
         }}>
             {children}
         </MultasContext.Provider>

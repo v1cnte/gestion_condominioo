@@ -72,7 +72,8 @@ export const getMorosos = async (req, res) => {
     const fechaLimite = new Date();
     fechaLimite.setDate(fechaLimite.getDate() - 30); 
 
-    const morosos = await Gasto.aggregate([
+    /* Obtiene gastos pendientes agrupados por unidad */
+    const gastosMorosos = await Gasto.aggregate([
       { 
         $match: { 
           estado: 'Pendiente',
@@ -86,11 +87,60 @@ export const getMorosos = async (req, res) => {
           totalDeuda: { $sum: "$monto" }, /* Suma total adeudada por el departamento */
           boletasPendientes: { $sum: 1 }  /* Cantidad de comprobantes de pago pendientes */
         }
-      },
-      { 
-        $sort: { totalDeuda: -1 } /* Ordena descendentemente: mayores deudores primero */
       }
     ]);
+
+    /* Obtiene multas pendientes agrupadas por unidad */
+    const multasMorosos = await Multa.aggregate([
+      { 
+        $match: { 
+          estado: 'Pendiente'
+        } 
+      },
+      {
+        $group: {
+          _id: "$unidad",
+          totalDeuda: { $sum: "$monto" },
+          boletasPendientes: { $sum: 1 }
+        }
+      }
+    ]);
+
+    /* Combina gastos y multas pendientes por unidad */
+    const morososMap = new Map();
+
+    /* Procesa gastos pendientes */
+    gastosMorosos.forEach(item => {
+      if (morososMap.has(item._id)) {
+        const existente = morososMap.get(item._id);
+        existente.totalDeuda += item.totalDeuda;
+        existente.boletasPendientes += item.boletasPendientes;
+      } else {
+        morososMap.set(item._id, {
+          _id: item._id,
+          totalDeuda: item.totalDeuda,
+          boletasPendientes: item.boletasPendientes
+        });
+      }
+    });
+
+    /* Procesa multas pendientes */
+    multasMorosos.forEach(item => {
+      if (morososMap.has(item._id)) {
+        const existente = morososMap.get(item._id);
+        existente.totalDeuda += item.totalDeuda;
+        existente.boletasPendientes += item.boletasPendientes;
+      } else {
+        morososMap.set(item._id, {
+          _id: item._id,
+          totalDeuda: item.totalDeuda,
+          boletasPendientes: item.boletasPendientes
+        });
+      }
+    });
+
+    /* Convierte el Map a array y ordena por deuda total descendente */
+    const morosos = Array.from(morososMap.values()).sort((a, b) => b.totalDeuda - a.totalDeuda);
 
     res.json(morosos);
   } catch (error) {

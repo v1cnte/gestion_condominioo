@@ -9,8 +9,12 @@ import {
   faSearch,
   faPhone
 } from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from '../context/AuthContext';
 
 function Condominios() {
+  const { user } = useAuth();
+  const canManage = ['admin', 'super_admin'].includes(user?.rol);
+
   const [condominios, setCondominios] = useState([
     { id: 1, nombre: 'Edificio Central', unidades: 128, ano: 2018, direccion: 'Av. Principal 123', estado: 'Activo' },
     { id: 2, nombre: 'Torre Norte', unidades: 96, ano: 2020, direccion: 'Calle Norte 45', estado: 'Activo' },
@@ -23,6 +27,10 @@ function Condominios() {
 
   const handleAgregar = (e) => {
     e.preventDefault();
+    if (!canManage) {
+      alert('No tienes permisos para realizar esta acción');
+      return;
+    }
     const nuevoCondo = {
       id: Date.now(),
       ...nuevo,
@@ -35,6 +43,11 @@ function Condominios() {
   };
 
   const handleEliminar = (id) => {
+    if (!canManage) {
+      alert('No tienes permisos para realizar esta acción');
+      return;
+    }
+
     if(window.confirm('¿Estás seguro de eliminar este condominio?')) {
       setCondominios(condominios.filter(c => c.id !== id));
     }
@@ -49,12 +62,14 @@ function Condominios() {
           <h1 className="text-3xl font-bold text-gray-800 mb-1">Mis Condominios</h1>
           <p className="text-gray-600">Gestión de propiedades y edificios</p>
         </div>
-        <button 
-          onClick={() => setShowModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-colors"
-        >
-          <FontAwesomeIcon icon={faPlus} /> Nuevo Condominio
-        </button>
+        {canManage && (
+          <button 
+            onClick={() => setShowModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-colors"
+          >
+            <FontAwesomeIcon icon={faPlus} /> Nuevo Condominio
+          </button>
+        )}
       </div>
 
       <div className="mb-6 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
@@ -91,10 +106,12 @@ function Condominios() {
             <div className="p-5">
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-lg font-bold text-gray-800">{condo.nombre}</h3>
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="text-gray-400 hover:text-blue-600"><FontAwesomeIcon icon={faEdit} /></button>
-                  <button onClick={() => handleEliminar(condo.id)} className="text-gray-400 hover:text-red-600"><FontAwesomeIcon icon={faTrash} /></button>
-                </div>
+                {canManage && (
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="text-gray-400 hover:text-blue-600"><FontAwesomeIcon icon={faEdit} /></button>
+                    <button onClick={() => handleEliminar(condo.id)} className="text-gray-400 hover:text-red-600"><FontAwesomeIcon icon={faTrash} /></button>
+                  </div>
+                )}
               </div>
               
               <div className="space-y-2 mb-4">
@@ -112,9 +129,11 @@ function Condominios() {
                 </div>
               </div>
 
-              <button className="w-full py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium">
-                Administrar
-              </button>
+              {canManage && (
+                <button className="w-full py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium">
+                  Administrar
+                </button>
+              )}
             </div>
           </div>
         ))}

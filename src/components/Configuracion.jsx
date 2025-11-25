@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faSave,
@@ -7,8 +8,16 @@ import {
   faBell,
   faCheck
 } from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from '../context/AuthContext';
 
 function Configuracion() {
+  const { user } = useAuth();
+  const canAccess = ['admin', 'super_admin'].includes(user?.rol);
+
+  if (!canAccess) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   /* Estado local para almacenar la configuración del condominio y proporcionar simulación de guardado */
   const [config, setConfig] = useState({
     nombreCondominio: 'Condominio Vista Hermosa',

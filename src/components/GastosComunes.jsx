@@ -61,15 +61,37 @@ function GastosComunes() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const gastoData = { ...formGasto, monto: parseFloat(formGasto.monto) };
 
-    if (isEditing) {
-      await updateGasto(currentId, gastoData);
-    } else {
-      await createGasto(gastoData);
-      notificarNuevoGasto(gastoData.concepto, gastoData.monto);
+    if (!esAdmin) {
+      alert('No tienes permisos para realizar esta acción');
+      return;
     }
-    setShowModal(false);
+
+    const gastoData = {
+      unidad: formGasto.unidad,
+      concepto: formGasto.concepto,
+      monto: parseFloat(formGasto.monto),
+      fecha: formGasto.fecha,
+      tipo: formGasto.tipo,
+      estado: formGasto.estado
+    };
+
+    try {
+      if (isEditing) {
+        await updateGasto(currentId, gastoData);
+      } else {
+        await createGasto(gastoData);
+        notificarNuevoGasto(gastoData.concepto, gastoData.monto);
+      }
+
+      await getGastos();
+      setIsEditing(false);
+      setCurrentId(null);
+      setShowModal(false);
+    } catch (error) {
+      console.error(error);
+      alert('Ocurrió un problema al guardar el gasto. Intenta nuevamente.');
+    }
   };
 
   const eliminarGasto = async (id) => {
@@ -95,7 +117,9 @@ function GastosComunes() {
   });
 
   /* Cálculo de totales y estadísticas de gastos */
-  const totalMonto = gastos.reduce((sum, g) => sum + g.monto, 0);
+  const totalMonto = gastos.reduce((sum, g) => (
+    g.estado === 'Pagado' ? sum + g.monto : sum
+  ), 0);
   const pendientes = gastos.filter(g => g.estado === 'Pendiente').length;
   const pagados = gastos.filter(g => g.estado === 'Pagado').length;
 

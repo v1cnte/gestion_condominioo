@@ -32,6 +32,13 @@ function Sidebar({ isOpen, onToggle, user, onLogout }) {
     { icon: faCog, label: 'Configuración', path: '/configuracion' },
   ];
 
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (item.path === '/configuracion' && user?.rol === 'residente') {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <div className={`fixed left-0 top-0 h-full bg-white shadow-lg border-r border-gray-200 transition-all duration-300 z-50 ${
       isOpen ? 'w-64' : 'w-16'
@@ -64,7 +71,7 @@ function Sidebar({ isOpen, onToggle, user, onLogout }) {
 
       <nav className="flex-1 p-2 overflow-y-auto">
         <div className="space-y-1">
-          {menuItems.map((item, index) => {
+          {filteredMenuItems.map((item, index) => {
             const isActive = location.pathname === item.path;
             return (
               <Link key={index} to={item.path} className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors duration-200 ${isActive ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' : 'text-gray-700 hover:bg-gray-100'}`}>
